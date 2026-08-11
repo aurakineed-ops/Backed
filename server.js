@@ -96,7 +96,7 @@ const APIs = [
     description: "Leak OSINT search query lookup"
   },
   {
-    url: "https://osint.invalidayushh.workers.dev/num?key=Sahil&q={number}",
+    url: "https://osint.invalidayushh.workers.dev/num?key=Rack&q={number}",
     method: "GET",
     description: "Mobile number intelligence lookup"
   },
@@ -133,7 +133,7 @@ const APIs = [
     description: "Family tree and demographic record lookup"
   },
   {
-    url: "https://osint.invalidayushh.workers.dev/email?key=Sahil&q={email}",
+    url: "https://osint.invalidayushh.workers.dev/email?key=Rack&q={email}",
     method: "GET",
     description: "Email breach and record lookup"
   },
@@ -153,7 +153,7 @@ const APIs = [
     description: "Registration Certificate (RC) lookup"
   },
   {
-    url: "https://osint.invalidayushh.workers.dev/insta?key=Sahil&q={username}",
+    url: "https://osint.invalidayushh.workers.dev/insta?key=Rack&q={username}",
     method: "GET",
     description: "Instagram account intelligence lookup"
   },
