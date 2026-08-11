@@ -1,7 +1,3 @@
-// =============================================
-// 🎯 ULTRA SIMPLE API PROXY - Bas APIs paste karo!
-// =============================================
-
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -11,37 +7,52 @@ app.use(cors());
 app.use(express.json());
 
 // =============================================
-// 📝 YAHAN APNI APIs PASTE KARO - Bas itna easy!
-// Format: 'name': 'https://api.com?key=YOUR_KEY&q={query}'
-// {query} - ye automatic user ke input se replace hoga
+// 📝 SIRF UNIQUE APIS - Koi duplicate nahi!
 // =============================================
 
 const APIS = {
-    // 🔥 Example APIs - Apni yahan paste karo
+    // 🔥 LEAK OSINT
     'leakpro': 'https://raxxosint.onrender.com/leakosint?key=Customer&quiry={query}',
-    'vehicle': 'https://leakapi.dpdns.org/vehicle-info?registration_number={query}',
-    'telegram': 'https://tg-to-num-ten.vercel.app/tg?key=sahil_X&num={query}',
-    'family': 'https://osint.invalidayushh.workers.dev/adhar?key=Sahil&q={query}',
-    'number': 'https://osint.invalidayushh.workers.dev/num?key=Sahil&q={query}',
-    'number-new': 'https://leakapi.dpdns.org/search?q={query}',
-    'email': 'https://osint.invalidayushh.workers.dev/email?key=Sahil&q={query}',
-    'insta': 'https://osint.invalidayushh.workers.dev/insta?key=Sahil&q={query}',
-    'vehicle-detail': 'https://leakapi.dpdns.org/api/vehicle?vehicle={query}',
-    'family-search': 'https://ayaanmods.site/family.php?key=YOUR_SUBHXCO_KEY&term={query}',
-    'num-india': 'https://ft-osint-api.duckdns.org/api/number?key=sahil-new&num={query}',
-    'num-pak': 'https://ft-osint-api.duckdns.org/api/pk?key=sahil-new&number={query}',
-    'bank': 'https://ft-osint-api.duckdns.org/api/ifsc?key=sahil-new&ifsc={query}',
-    'pan': 'https://ft-osint-api.duckdns.org/api/pan?key=sahil-new&pan={query}',
-    'rc': 'https://leakapi.dpdns.org/rc?registration_number={query}',
-    'ip': 'https://ft-osint-api.duckdns.org/api/ip?key=sahil-new&ip={query}',
-    'pincode': 'https://ft-osint-api.duckdns.org/api/pincode?key=sahil-new&pin={query}',
-    'github': 'https://ft-osint-api.duckdns.org/api/git?key=sahil-new&username={query}',
-    'bgmi': 'https://ft-osint-api.duckdns.org/api/bgmi?key=sahil-new&uid={query}',
-    'freefire': 'https://ft-osint-api.duckdns.org/api/ff?key=sahil-new&uid={query}',
+    
+    // 📱 NUMBER BASED
+    'num': 'https://osint.invalidayushh.workers.dev/num?key=Sahil&q={number}',
+    'num-new': 'https://leakapi.dpdns.org/search?q={number}',
+    'num-india': 'https://ft-osint-api.duckdns.org/api/number?key=YOUR_FTOSINT_KEY&num={number}',
+    'num-pak': 'https://ft-osint-api.duckdns.org/api/pk?key=YOUR_FTOSINT_KEY&number={number}',
+    'telegram-num': 'https://tg-to-num-ten.vercel.app/tg?key=sahil_X&num={number}',
+    
+    // 👨‍👩‍👧‍👦 FAMILY / AADHAR
+    'adhar': 'https://osint.invalidayushh.workers.dev/adhar?key=Sahil&q={adhar}',
+    'family': 'https://ayaanmods.site/family.php?key=YOUR_SUBHXCO_KEY&term={adhar}',
+    
+    // 📧 EMAIL
+    'email': 'https://osint.invalidayushh.workers.dev/email?key=Sahil&q={email}',
+    
+    // 🚗 VEHICLE
+    'vehicle': 'https://leakapi.dpdns.org/vehicle-info?registration_number={vehicle}',
+    'vehicle-detail': 'https://leakapi.dpdns.org/api/vehicle?vehicle={vehicle}',
+    'rc': 'https://leakapi.dpdns.org/rc?registration_number={vehicle}',
+    
+    // 📱 SOCIAL MEDIA
+    'insta': 'https://osint.invalidayushh.workers.dev/insta?key=Sahil&q={username}',
+    'telegram': 'https://tg-to-num-ten.vercel.app/tg?key=sahil_X&num={username}',
+    'github': 'https://ft-osint-api.duckdns.org/api/git?key=YOUR_FTOSINT_KEY&username={username}',
+    
+    // 🎮 GAMING
+    'bgmi': 'https://ft-osint-api.duckdns.org/api/bgmi?key=YOUR_FTOSINT_KEY&uid={uid}',
+    'freefire': 'https://ft-osint-api.duckdns.org/api/ff?key=YOUR_FTOSINT_KEY&uid={uid}',
+    
+    // 🏦 FINANCIAL
+    'bank': 'https://ft-osint-api.duckdns.org/api/ifsc?key=YOUR_FTOSINT_KEY&ifsc={ifsc}',
+    'pan': 'https://ft-osint-api.duckdns.org/api/pan?key=YOUR_FTOSINT_KEY&pan={pan}',
+    
+    // 🌐 OTHER
+    'ip': 'https://ft-osint-api.duckdns.org/api/ip?key=YOUR_FTOSINT_KEY&ip={ip}',
+    'pincode': 'https://ft-osint-api.duckdns.org/api/pincode?key=YOUR_FTOSINT_KEY&pin={pincode}',
 };
 
 // =============================================
-// 🧹 Clean karna hai toh ye fields remove hongi
+// 🧹 CLEAN RESPONSE
 // =============================================
 
 const REMOVE_FIELDS = [
@@ -54,14 +65,9 @@ const REMOVE_FIELDS = [
     '@invalidayushh', '@ftgamerv2', '@ftgamer2', 'InvalidAyush',
     '@InvalidAyush', 'invalidayush', '@invalidayush', 'DM TO BUY ACCESS',
     'xtradeep', 'Kon_Hu_Mai', 'support', '@raxusss', 'raxusss', 'Raxusss',
-    'Support', 'help', 'Help'
+    'Support', 'help', 'Help', 'key', 'KEY', 'api_key', 'API_KEY'
 ];
 
-// =============================================
-// ⚙️ ENGINE - Kuch mat badlo, sab auto hai!
-// =============================================
-
-// Clean response function
 function cleanData(data) {
     if (!data || typeof data !== 'object') return data;
     const cleaned = JSON.parse(JSON.stringify(data));
@@ -80,43 +86,87 @@ function cleanData(data) {
     return cleaned;
 }
 
-// Get query from request
-function getQuery(req) {
-    const all = { ...req.query, ...req.body, ...req.params };
-    const keys = ['q', 'query', 'number', 'num', 'id', 'username', 'term', 'pin', 'ip', 'uid', 'ifsc', 'pan', 'email', 'vehicle'];
-    
-    for (let key of keys) {
-        if (all[key]) return all[key];
-    }
-    return null;
-}
+// =============================================
+// 🔧 MAIN HANDLER
+// =============================================
 
-// Main API handler
-app.all('/api/:name', async (req, res) => {
-    const name = req.params.name;
-    const apiUrl = APIS[name];
+app.all('/api/:endpoint', async (req, res) => {
+    const endpoint = req.params.endpoint;
+    const apiUrl = APIS[endpoint];
     
     if (!apiUrl) {
         return res.status(404).json({
             success: false,
-            error: `❌ API '${name}' nahi mili`,
+            error: `❌ '${endpoint}' nahi mila`,
             available: Object.keys(APIS)
         });
     }
     
-    const query = getQuery(req);
-    if (!query) {
+    const params = { ...req.query, ...req.body };
+    
+    // Parameter mapping
+    const paramMap = {
+        'num': ['number', 'num', 'q', 'query'],
+        'num-new': ['number', 'num', 'q', 'query'],
+        'num-india': ['number', 'num', 'q', 'query'],
+        'num-pak': ['number', 'num', 'q', 'query'],
+        'telegram-num': ['number', 'num', 'q', 'query'],
+        'adhar': ['adhar', 'aadhar', 'number', 'q', 'query'],
+        'family': ['adhar', 'aadhar', 'number', 'term', 'q'],
+        'email': ['email', 'q', 'query'],
+        'vehicle': ['vehicle', 'registration_number', 'q', 'query'],
+        'vehicle-detail': ['vehicle', 'v', 'q', 'query'],
+        'rc': ['vehicle', 'registration_number', 'q', 'query'],
+        'insta': ['username', 'user', 'q', 'query'],
+        'telegram': ['username', 'user', 'q', 'query'],
+        'github': ['username', 'user', 'q', 'query'],
+        'bgmi': ['uid', 'id', 'q', 'query'],
+        'freefire': ['uid', 'id', 'q', 'query'],
+        'bank': ['ifsc', 'q', 'query'],
+        'pan': ['pan', 'q', 'query'],
+        'ip': ['ip', 'q', 'query'],
+        'pincode': ['pincode', 'pin', 'q', 'query'],
+        'leakpro': ['number', 'num', 'q', 'query']
+    };
+    
+    const keys = paramMap[endpoint] || ['q', 'query', 'number', 'num'];
+    let value = null;
+    for (let key of keys) {
+        if (params[key]) { value = params[key]; break; }
+    }
+    
+    if (!value) {
         return res.status(400).json({
             success: false,
-            error: '❌ Query parameter nahi mila (q, number, id, etc.)'
+            error: `❌ Parameter chahiye`,
+            example: `/api/${endpoint}?${keys[0]}=VALUE`
         });
     }
     
-    // Replace {query} with actual value
-    const url = apiUrl.replace(/\{query\}/g, encodeURIComponent(query));
+    // URL banayein
+    let url = apiUrl;
+    const replacements = {
+        '{query}': encodeURIComponent(value),
+        '{number}': encodeURIComponent(value),
+        '{num}': encodeURIComponent(value),
+        '{adhar}': encodeURIComponent(value),
+        '{email}': encodeURIComponent(value),
+        '{vehicle}': encodeURIComponent(value),
+        '{username}': encodeURIComponent(value),
+        '{uid}': encodeURIComponent(value),
+        '{ifsc}': encodeURIComponent(value),
+        '{pan}': encodeURIComponent(value),
+        '{ip}': encodeURIComponent(value),
+        '{pincode}': encodeURIComponent(value),
+        '{pin}': encodeURIComponent(value)
+    };
+    
+    for (let [key, val] of Object.entries(replacements)) {
+        url = url.replace(new RegExp(key, 'g'), val);
+    }
     
     try {
-        console.log(`📡 [${name}] → ${url}`);
+        console.log(`📡 [${endpoint}] → ${url}`);
         
         const response = await axios({
             method: req.method,
@@ -132,32 +182,48 @@ app.all('/api/:name', async (req, res) => {
             try { data = JSON.parse(data); } catch (e) {}
         }
         
-        // Clean and send
-        const cleaned = cleanData(data);
         res.json({
             success: true,
-            api: name,
-            query: query,
-            data: cleaned
+            endpoint: endpoint,
+            query: value,
+            data: cleanData(data)
         });
         
     } catch (error) {
-        console.error(`❌ [${name}] Error:`, error.message);
         res.status(error.response?.status || 500).json({
             success: false,
-            api: name,
-            error: error.message,
-            details: error.response?.data || null
+            endpoint: endpoint,
+            error: error.message
         });
     }
 });
 
-// 📋 Get all APIs list
+// =============================================
+// 📋 UNIQUE APIS LIST
+// =============================================
+
 app.get('/api/list', (req, res) => {
-    const list = Object.keys(APIS).map(name => ({
-        name: name,
-        url: APIS[name]
-    }));
+    const list = Object.keys(APIS).map(name => {
+        const paramMap = {
+            'num': 'number', 'num-new': 'number', 'num-india': 'number',
+            'num-pak': 'number', 'telegram-num': 'number',
+            'adhar': 'adhar', 'family': 'adhar',
+            'email': 'email',
+            'vehicle': 'vehicle', 'vehicle-detail': 'vehicle', 'rc': 'vehicle',
+            'insta': 'username', 'telegram': 'username', 'github': 'username',
+            'bgmi': 'uid', 'freefire': 'uid',
+            'bank': 'ifsc', 'pan': 'pan',
+            'ip': 'ip', 'pincode': 'pincode',
+            'leakpro': 'number'
+        };
+        const param = paramMap[name] || 'query';
+        return {
+            name: name,
+            param: param,
+            example: `/${name}?${param}=VALUE`
+        };
+    });
+    
     res.json({
         success: true,
         total: list.length,
@@ -165,71 +231,98 @@ app.get('/api/list', (req, res) => {
     });
 });
 
-// 🏥 Health check
-app.get('/api/health', (req, res) => {
-    res.json({
-        status: '✅ OK',
-        apis: Object.keys(APIS).length,
-        timestamp: new Date().toISOString()
-    });
-});
+// =============================================
+// 🏠 HOME
+// =============================================
 
-// 🏠 Home - Simple HTML
 app.get('/', (req, res) => {
-    const apiList = Object.keys(APIS).map(name => 
-        `<li><strong>/${name}</strong> → ${APIS[name]}</li>`
-    ).join('');
+    const html = Object.keys(APIS).map(name => {
+        const paramMap = {
+            'num': 'number', 'num-new': 'number', 'num-india': 'number',
+            'num-pak': 'number', 'telegram-num': 'number',
+            'adhar': 'adhar', 'family': 'adhar',
+            'email': 'email',
+            'vehicle': 'vehicle', 'vehicle-detail': 'vehicle', 'rc': 'vehicle',
+            'insta': 'username', 'telegram': 'username', 'github': 'username',
+            'bgmi': 'uid', 'freefire': 'uid',
+            'bank': 'ifsc', 'pan': 'pan',
+            'ip': 'ip', 'pincode': 'pincode',
+            'leakpro': 'number'
+        };
+        const param = paramMap[name] || 'query';
+        return `<li><b>/${name}</b> → ?${param}=VALUE</li>`;
+    }).join('');
     
     res.send(`
         <!DOCTYPE html>
         <html>
         <head>
-            <title>🚀 API Proxy</title>
+            <meta charset="UTF-8">
+            <title>🚀 Unique API Proxy</title>
             <style>
-                body { font-family: Arial; background: #0a0e1a; color: #e0e0e0; padding: 20px; }
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { background: #0a0e1a; color: #e0e0e0; font-family: Arial, sans-serif; padding: 20px; }
                 .container { max-width: 900px; margin: auto; }
-                h1 { color: #00d4ff; }
-                .api-list { background: #141b2d; padding: 20px; border-radius: 10px; }
-                li { padding: 8px; border-bottom: 1px solid #1e2a45; list-style: none; }
-                .badge { color: #00d4ff; }
-                .example { color: #4ade80; font-size: 14px; }
-                .footer { margin-top: 30px; color: #4a5568; text-align: center; }
+                h1 { color: #00d4ff; text-align: center; font-size: 2.5rem; }
+                .subtitle { text-align: center; color: #8892b0; margin-bottom: 30px; }
+                .box { background: #141b2d; border: 1px solid #1e2a45; border-radius: 12px; padding: 25px; }
+                .box h3 { color: #00d4ff; margin-bottom: 15px; }
+                .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+                li { padding: 8px 12px; border-bottom: 1px solid #1e2a45; list-style: none; font-size: 14px; }
+                li:hover { background: #1a2340; }
+                .badge { color: #4ade80; }
+                .stats { display: flex; gap: 20px; justify-content: center; margin: 20px 0; }
+                .stat { background: #141b2d; padding: 10px 25px; border-radius: 8px; border: 1px solid #1e2a45; text-align: center; }
+                .stat .num { color: #00d4ff; font-size: 24px; font-weight: bold; }
+                .stat .label { color: #8892b0; font-size: 12px; }
+                .example { background: #0a0e1a; padding: 15px; border-radius: 6px; margin-top: 20px; color: #fbbf24; font-size: 13px; }
+                .footer { text-align: center; margin-top: 30px; color: #4a5568; }
+                @media (max-width: 600px) {
+                    .grid { grid-template-columns: 1fr; }
+                    h1 { font-size: 1.8rem; }
+                }
             </style>
         </head>
         <body>
             <div class="container">
-                <h1>🚀 API Proxy Server</h1>
-                <p>Total APIs: <span class="badge">${Object.keys(APIS).length}</span></p>
-                <div class="api-list">
+                <h1>🚀 Unique API Proxy</h1>
+                <p class="subtitle">${Object.keys(APIS).length} Unique APIs - No Duplicates!</p>
+                
+                <div class="stats">
+                    <div class="stat"><div class="num">${Object.keys(APIS).length}</div><div class="label">Total APIs</div></div>
+                    <div class="stat"><div class="num">✅</div><div class="label">All Unique</div></div>
+                </div>
+                
+                <div class="box">
                     <h3>📡 Available Endpoints:</h3>
-                    <ul>${apiList}</ul>
+                    <div class="grid"><ul style="grid-column: 1/-1;">${html}</ul></div>
+                    
+                    <div class="example">
+                        <strong>🔍 Examples:</strong><br>
+                        /api/num?number=9876543210<br>
+                        /api/adhar?adhar=123456789012<br>
+                        /api/vehicle?vehicle=DL01AB1234<br>
+                        /api/email?email=test@gmail.com<br>
+                        /api/insta?username=john_doe<br>
+                        /api/bank?ifsc=SBIN0001234
+                    </div>
                 </div>
-                <div class="example">
-                    <h3>🔍 Example:</h3>
-                    <p>GET /api/insta?username=example</p>
-                    <p>GET /api/vehicle?number=DL01AB1234</p>
+                
+                <div class="footer">
+                    💡 <a href="/api/list" style="color: #00d4ff;">/api/list</a> - Sari APIs ka JSON
                 </div>
-                <div class="footer">💡 {query} automatic replace ho jayega</div>
             </div>
         </body>
         </html>
     `);
 });
 
-// =============================================
-// 📦 EXPORT FOR VERCEL
-// =============================================
 module.exports = app;
 
-// Local run
 if (require.main === module) {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
         console.log(`\n🚀 Server running on http://localhost:${PORT}`);
-        console.log(`📡 Total APIs: ${Object.keys(APIS).length}\n`);
-        Object.keys(APIS).forEach(name => {
-            console.log(`   /api/${name}`);
-        });
-        console.log('\n✅ Ready to go!\n');
+        console.log(`📡 Total Unique APIs: ${Object.keys(APIS).length}\n`);
     });
 }
