@@ -133,28 +133,50 @@ function generateEndpointName(api, existingNames) {
 const registeredAPIs = [];
 const nameSet = new Set();
 
+function exampleValFor(param) {
+  if (param.includes('number') || param.includes('num')) return '9876543210';
+  if (param.includes('vehicle') || param.includes('registration')) return 'DL01AB1234';
+  if (param.includes('email'))    return 'test@example.com';
+  if (param.includes('username') || param.includes('user')) return 'john_doe';
+  if (param.includes('ifsc'))     return 'SBIN0001234';
+  if (param.includes('pan'))      return 'ABCDE1234F';
+  if (param.includes('pincode') || param === 'pin') return '110001';
+  if (param.includes('adhar') || param.includes('aadhar')) return '123456789012';
+  if (param.includes('uid'))      return '123456789';
+  if (param.includes('ip'))       return '8.8.8.8';
+  if (param.includes('quiry') || param.includes('query') || param === 'q') return 'test@example.com';
+  return '12345678';
+}
+
 APIs.forEach(api => {
   const autoName = generateEndpointName(api, nameSet);
   nameSet.add(autoName);
   const matches = api.url.match(/\{([^}]+)\}/g);
   const required = matches ? matches.map(m => m.replace(/[{}]/g, '')) : [];
+
+  // build example query string with ALL params
+  const exampleQuery = required.length > 0
+    ? required.map(p => `${p}=${exampleValFor(p)}`).join('&')
+    : 'query=test';
+
   const exampleParam = required[0] || 'query';
+  const exampleVal   = exampleValFor(exampleParam);
 
-  let exampleVal = '12345678';
-  if (exampleParam.includes('number') || exampleParam.includes('num')) exampleVal = '9876543210';
-  if (exampleParam.includes('vehicle'))                                exampleVal = 'DL01AB1234';
-  if (exampleParam.includes('email'))                                  exampleVal = 'test@example.com';
-  if (exampleParam.includes('username'))                               exampleVal = 'john_doe';
-  if (exampleParam.includes('ifsc'))                                   exampleVal = 'SBIN0001234';
-  if (exampleParam.includes('pan'))                                    exampleVal = 'ABCDE1234F';
-  if (exampleParam.includes('ip'))                                     exampleVal = '8.8.8.8';
-  if (exampleParam.includes('pincode') || exampleParam.includes('pin')) exampleVal = '110001';
-  if (exampleParam.includes('adhar'))                                  exampleVal = '123456789012';
-  if (exampleParam.includes('uid'))                                    exampleVal = '123456789';
+  // per-param example map passed to EJS template
+  const paramExamples = {};
+  required.forEach(p => { paramExamples[p] = exampleValFor(p); });
 
-  registeredAPIs.push({ name: autoName, url: api.url, method: api.method || 'GET',
-    description: api.description || 'API endpoint', requiredParams: required,
-    exampleParam, exampleVal });
+  registeredAPIs.push({
+    name: autoName,
+    url: api.url,
+    method: api.method || 'GET',
+    description: api.description || 'API endpoint',
+    requiredParams: required,
+    exampleParam,
+    exampleVal,
+    exampleQuery,
+    paramExamples
+  });
 });
 
 // ─── ROUTES ──────────────────────────────────────────────
@@ -191,7 +213,10 @@ app.get('/api', (req, res) => {
       description: api.description,
       publicUrl: `${baseUrl}/api/${api.name}`,
       requiredParams: api.requiredParams,
-      example: `${baseUrl}/api/${api.name}?${api.exampleParam}=${api.exampleVal}`
+      paramExamples: api.paramExamples,
+      exampleQuery: api.exampleQuery,
+      // full example URL with ALL params
+      example: `${baseUrl}/api/${api.name}?${api.exampleQuery}`
     }));
 
     res.render('index', { apis: formattedApis, baseUrl, owner: OWNER, channel: CHANNEL });
