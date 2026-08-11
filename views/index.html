@@ -258,10 +258,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h8"/></svg>
       Endpoints<span class="badge"><%= list.length %></span>
     </a>
-    <button class="nav-item nav-analytics" id="sb-analytics-btn" type="button">
+    <a class="nav-item nav-analytics" href="/analytics">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="10" width="3" height="5" rx=".5"/><rect x="6" y="6" width="3" height="9" rx=".5"/><rect x="11" y="2" width="3" height="13" rx=".5"/></svg>
       Analytics<span class="live-dot"></span>
-    </button>
+    </a>
     <a class="nav-item" href="/health" target="_blank">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 8h3l2-5 3 10 2-5h4"/></svg>
       Health Check
@@ -289,29 +289,38 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
     <span class="sep-dot"></span>
     <span>Owner <b><%= owner %></b></span>
   </div>
-</header>
-
-<!-- ANALYTICS DRAWER (inline, slides open on click) -->
-<div class="analytics-drawer" id="analytics-drawer">
-  <div class="drawer-inner">
-    <div class="drawer-title">◈ Live Analytics Snapshot</div>
-    <div class="analytics-stats">
-      <div class="an-stat blue"><div class="an-label">Total Requests</div><div class="an-val blue" id="d-total">—</div><div class="an-sub" id="d-uptime">—</div></div>
-      <div class="an-stat green"><div class="an-label">Success</div><div class="an-val green" id="d-success">—</div><div class="an-sub" id="d-spct">—% rate</div></div>
-      <div class="an-stat red"><div class="an-label">Errors</div><div class="an-val red" id="d-error">—</div><div class="an-sub" id="d-epct">—% rate</div></div>
-      <div class="an-stat purple"><div class="an-label">Unique IPs</div><div class="an-val purple" id="d-ips">—</div><div class="an-sub">callers</div></div>
-      <div class="an-stat amber"><div class="an-label">Avg Latency</div><div class="an-val amber" id="d-lat">—</div><div class="an-sub">ms</div></div>
-    </div>
-    <div class="drawer-actions">
-      <a class="btn-analytics-full" href="/analytics">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="10" width="3" height="5" rx=".5"/><rect x="6" y="6" width="3" height="9" rx=".5"/><rect x="11" y="2" width="3" height="13" rx=".5"/></svg>
-        Full Analytics Dashboard
-      </a>
-      <a class="btn-raw" href="/analytics/data" target="_blank">Raw JSON</a>
-      <span class="drawer-refresh" id="d-refreshed">fetching…</span>
-    </div>
+  <div style="margin-top:1.25rem;display:flex;gap:.65rem;flex-wrap:wrap;align-items:center;">
+    <a href="/analytics" style="
+      display:inline-flex;align-items:center;gap:.5rem;
+      padding:.55rem 1.15rem;border-radius:9px;
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      color:#fff;font-size:.82rem;font-weight:600;text-decoration:none;
+      border:none;cursor:pointer;
+      box-shadow:0 0 18px rgba(124,58,237,.4);
+      transition:opacity .2s,transform .15s,box-shadow .2s;
+    "
+    onmouseover="this.style.opacity='.88';this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 28px rgba(124,58,237,.6)'"
+    onmouseout="this.style.opacity='1';this.style.transform='';this.style.boxShadow='0 0 18px rgba(124,58,237,.4)'"
+    >
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="10" width="3" height="5" rx=".5"/><rect x="6" y="6" width="3" height="9" rx=".5"/><rect x="11" y="2" width="3" height="13" rx=".5"/></svg>
+      View Analytics
+      <span style="width:6px;height:6px;border-radius:50%;background:#3fb950;box-shadow:0 0 6px #3fb950;animation:blink 2s ease-in-out infinite;flex-shrink:0;"></span>
+    </a>
+    <a href="/analytics/data" target="_blank" style="
+      display:inline-flex;align-items:center;gap:.45rem;
+      padding:.53rem .95rem;border-radius:9px;
+      background:transparent;border:1px solid rgba(255,255,255,.12);
+      color:#7d8590;font-size:.78rem;text-decoration:none;
+      transition:border-color .2s,color .2s;
+    "
+    onmouseover="this.style.borderColor='rgba(168,85,247,.5)';this.style.color='#a855f7'"
+    onmouseout="this.style.borderColor='rgba(255,255,255,.12)';this.style.color='#7d8590'"
+    >
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 5h6M5 8h6M5 11h3"/></svg>
+      Raw JSON
+    </a>
   </div>
-</div>
+</header>
 
 <!-- COMMAND BAR -->
 <% if (list.length) { %>
@@ -461,26 +470,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
   }
 
   /* ── ANALYTICS DRAWER ── */
-  var drawer=document.getElementById('analytics-drawer');
-  var drawerOpen=false;
-  var sbBtn=document.getElementById('sb-analytics-btn');
-
+  /* ── ANALYTICS MINI DRAWER (auto-loads on page, collapsed by default) ── */
   function fmtN(n){if(n===undefined||n===null)return'—';if(n>=1000000)return(n/1e6).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(1)+'K';return String(n);}
   function fmtUp(s){if(!s)return'—';var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;if(h>0)return h+'h '+m+'m uptime';if(m>0)return m+'m '+sec+'s uptime';return sec+'s uptime';}
 
-  function fetchAnalytics(){
+  function fetchAndUpdatePills(){
     fetch('/analytics/data').then(function(r){return r.json();}).then(function(d){
-      document.getElementById('d-total').textContent=fmtN(d.totalRequests);
-      document.getElementById('d-uptime').textContent=fmtUp(d.uptime);
-      document.getElementById('d-success').textContent=fmtN(d.totalSuccess);
-      document.getElementById('d-spct').textContent=(d.totalRequests>0?((d.totalSuccess/d.totalRequests)*100).toFixed(1):'0.0')+'% rate';
-      document.getElementById('d-error').textContent=fmtN(d.totalError);
-      document.getElementById('d-epct').textContent=d.errorRate+'% rate';
-      document.getElementById('d-ips').textContent=fmtN(d.uniqueIps);
-      document.getElementById('d-lat').textContent=d.avgLatency+'ms';
-      document.getElementById('d-refreshed').textContent='Updated '+new Date().toLocaleTimeString();
-
-      // also update per-card status pills from analytics
+      // update per-card status pills from live analytics data
       if(d.topEndpoints){
         d.topEndpoints.forEach(function(ep){
           var pill=document.querySelector('.status-pill[data-ep="'+ep.name+'"]');
@@ -494,16 +490,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
           }
         });
       }
-    }).catch(function(){
-      document.getElementById('d-refreshed').textContent='Fetch failed';
-    });
+    }).catch(function(){});
   }
-
-  sbBtn.addEventListener('click',function(){
-    drawerOpen=!drawerOpen;
-    drawer.classList.toggle('open',drawerOpen);
-    if(drawerOpen) fetchAnalytics();
-  });
+  // silently refresh pills every 30s
+  fetchAndUpdatePills();
+  setInterval(fetchAndUpdatePills, 30000);
 
   /* ── PER-CARD TEST BUTTON ── */
   document.querySelectorAll('.test-btn').forEach(function(btn){
