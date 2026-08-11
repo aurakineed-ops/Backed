@@ -1,15 +1,16 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
-// Configure Express to render EJS inside .html files safely from root
+// Configure Express to render EJS inside .html files safely from views folder
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
-app.set('views', __dirname);
+app.set('views', path.join(__dirname, 'views'));
 
-// Security, CORS, and Body Parsers (Zero artificial rate limiting)
+// Security, CORS, and Body Parsers
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -17,8 +18,8 @@ app.use(express.urlencoded({ extended: true }));
 // ==========================================
 // CUSTOM BRANDING & CLEANING CONFIGURATION
 // ==========================================
-const OWNER = "@yourusername";
-const CHANNEL = "@yourchannel";
+const OWNER = "@sahilxalone";
+const CHANNEL = "@osintnxera";
 
 const removeFields = [
   'owner', 'OWNER', 'channel', 'CHANNEL', 'telegram', 'contact',
@@ -305,7 +306,12 @@ app.get('/api', (req, res) => {
 
         res.render('index', { apis: formattedApis, baseUrl });
     } catch (err) {
-        res.status(500).json({ success: false, error: "Template rendering failed. Ensure index.html exists in the root directory." });
+        console.error('Template error:', err);
+        res.status(500).json({ 
+            success: false, 
+            error: "Template rendering failed", 
+            details: err.message 
+        });
     }
 });
 
