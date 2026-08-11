@@ -11,6 +11,8 @@
         header { text-align: center; margin-bottom: 2.5rem; }
         h1 { font-size: 2.25rem; color: #38bdf8; margin-bottom: 0.5rem; }
         p.subtitle { color: #9ca3af; font-size: 1.05rem; }
+        .brand-info { background: #111827; border: 1px solid #1f2937; padding: 0.75rem 1.5rem; border-radius: 0.5rem; display: inline-block; margin-top: 0.5rem; }
+        .brand-info span { color: #38bdf8; font-weight: bold; }
         .stats-bar { display: flex; gap: 1rem; margin-bottom: 2rem; justify-content: center; flex-wrap: wrap; }
         .stat-card { background: #111827; border: 1px solid #1f2937; padding: 1rem 1.5rem; border-radius: 0.5rem; text-align: center; min-width: 120px; }
         .stat-card .num { font-size: 1.5rem; font-weight: bold; color: #38bdf8; }
@@ -29,6 +31,8 @@
         .example-box a { color: #38bdf8; text-decoration: none; }
         .example-box a:hover { text-decoration: underline; }
         .footer { text-align: center; margin-top: 2rem; color: #6b7280; font-size: 0.85rem; }
+        .footer .brand { color: #38bdf8; }
+        .error-msg { background: #1f2937; border-left: 4px solid #ef4444; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; color: #fca5a5; }
         @media (max-width: 640px) { body { padding: 1rem 0.5rem; } }
     </style>
 </head>
@@ -37,6 +41,9 @@
         <header>
             <h1>🚀 API Gateway</h1>
             <p class="subtitle">Unified Public Endpoints & Auto-Generated Documentation</p>
+            <div class="brand-info">
+                <span>Owner:</span> <%= owner %> | <span>Channel:</span> <%= channel %>
+            </div>
         </header>
 
         <div class="stats-bar">
@@ -77,6 +84,7 @@
         
         <div class="footer">
             <p>API Gateway v1.0 | All endpoints are public and rate-limited</p>
+            <p class="brand">Owned by <strong><%= owner %></strong> | Channel: <strong><%= channel %></strong></p>
         </div>
     </div>
 </body>
