@@ -4,7 +4,7 @@ const cors = require('cors');
 
 const app = express();
 
-// Configure Express to render EJS inside .html files
+// Configure Express to render EJS inside .html files safely from root
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 app.set('views', __dirname);
@@ -21,53 +21,16 @@ const OWNER = "@yourusername";
 const CHANNEL = "@yourchannel";
 
 const removeFields = [
-  'owner', 'OWNER',
-  'channel', 'CHANNEL',
-  'telegram',
-  'contact',
-  'instagram',
-  'twitter',
-  'fb',
-  'facebook',
-  'website',
-  'github',
-  'created_by',
-  'createdBy',
-  'owner_username',
-  'owner_channel',
-  'credit',
-  'Credits',
-  'Credit',
-  'Source',
-  'source',
-  'provider',
-  'Provider',
-  'api_source',
-  'API_Source',
-  'developer',
-  'Developer',
-  'dev',
-  'Dev',
-  'invalidayushh',
-  'ftgamerv2',
-  'ftgamer2',
-  '@invalidayushh',
-  '@ftgamerv2',
-  '@ftgamer2',
-  'InvalidAyush',
-  '@InvalidAyush',
-  'invalidayush',
-  '@invalidayush',
-  'DM TO BUY ACCESS',
-  'xtradeep',
-  'Kon_Hu_Mai',
-  'support',
-  '@raxusss',
-  'raxusss',
-  'Raxusss',
-  'Support',
-  'help',
-  'Help'
+  'owner', 'OWNER', 'channel', 'CHANNEL', 'telegram', 'contact',
+  'instagram', 'twitter', 'fb', 'facebook', 'website', 'github',
+  'created_by', 'createdBy', 'owner_username', 'owner_channel',
+  'credit', 'Credits', 'Credit', 'Source', 'source', 'provider',
+  'Provider', 'api_source', 'API_Source', 'developer', 'Developer',
+  'dev', 'Dev', 'invalidayushh', 'ftgamerv2', 'ftgamer2',
+  '@invalidayushh', '@ftgamerv2', '@ftgamer2', 'InvalidAyush',
+  '@InvalidAyush', 'invalidayush', '@invalidayush', 'DM TO BUY ACCESS',
+  'xtradeep', 'Kon_Hu_Mai', 'support', '@raxusss', 'raxusss', 'Raxusss',
+  'Support', 'help', 'Help'
 ];
 
 const badSubstrings = [
@@ -79,38 +42,42 @@ const badSubstrings = [
 const removeFieldsLower = new Set(removeFields.map(f => f.toLowerCase()));
 
 function cleanData(obj) {
-    if (!obj || typeof obj !== 'object') {
-        if (typeof obj === 'string') {
-            let val = obj;
-            for (const sub of badSubstrings) {
-                const regex = new RegExp(sub, 'gi');
-                val = val.replace(regex, '').trim();
+    try {
+        if (!obj || typeof obj !== 'object') {
+            if (typeof obj === 'string') {
+                let val = obj;
+                for (const sub of badSubstrings) {
+                    const regex = new RegExp(sub, 'gi');
+                    val = val.replace(regex, '').trim();
+                }
+                return val;
             }
-            return val;
+            return obj;
         }
+
+        if (Array.isArray(obj)) {
+            return obj.map(item => cleanData(item)).filter(item => {
+                if (typeof item === 'string' && item === '') return false;
+                return true;
+            });
+        }
+
+        const cleaned = {};
+        for (const key of Object.keys(obj)) {
+            if (removeFieldsLower.has(key.toLowerCase())) {
+                continue;
+            }
+            const cleanedValue = cleanData(obj[key]);
+            if (cleanedValue !== null && cleanedValue !== undefined && cleanedValue !== '') {
+                cleaned[key] = cleanedValue;
+            } else if (cleanedValue === 0 || cleanedValue === false || cleanedValue === true) {
+                cleaned[key] = cleanedValue;
+            }
+        }
+        return cleaned;
+    } catch (e) {
         return obj;
     }
-
-    if (Array.isArray(obj)) {
-        return obj.map(item => cleanData(item)).filter(item => {
-            if (typeof item === 'string' && item === '') return false;
-            return true;
-        });
-    }
-
-    const cleaned = {};
-    for (const key of Object.keys(obj)) {
-        if (removeFieldsLower.has(key.toLowerCase())) {
-            continue;
-        }
-        const cleanedValue = cleanData(obj[key]);
-        if (cleanedValue !== null && cleanedValue !== undefined && cleanedValue !== '') {
-            cleaned[key] = cleanedValue;
-        } else if (cleanedValue === 0 || cleanedValue === false || cleanedValue === true) {
-            cleaned[key] = cleanedValue;
-        }
-    }
-    return cleaned;
 }
 
 // ==========================================
@@ -322,75 +289,79 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api', (req, res) => {
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.get('host');
-    const baseUrl = `${protocol}://${host}`;
+    try {
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+        const host = req.get('host');
+        const baseUrl = `${protocol}://${host}`;
 
-    const formattedApis = registeredAPIs.map(api => ({
-        name: api.name,
-        method: api.method,
-        description: api.description,
-        publicUrl: `${baseUrl}/api/${api.name}`,
-        requiredParams: api.requiredParams,
-        example: `${baseUrl}/api/${api.name}?${api.exampleParam}=${api.exampleVal}`
-    }));
+        const formattedApis = registeredAPIs.map(api => ({
+            name: api.name,
+            method: api.method,
+            description: api.description,
+            publicUrl: `${baseUrl}/api/${api.name}`,
+            requiredParams: api.requiredParams,
+            example: `${baseUrl}/api/${api.name}?${api.exampleParam}=${api.exampleVal}`
+        }));
 
-    res.render('index', { apis: formattedApis, baseUrl });
+        res.render('index', { apis: formattedApis, baseUrl });
+    } catch (err) {
+        res.status(500).json({ success: false, error: "Template rendering failed. Ensure index.html exists in the root directory." });
+    }
 });
 
 app.all('/api/:endpoint', async (req, res) => {
-    const endpointName = req.params.endpoint;
-    const apiConfig = registeredAPIs.find(a => a.name === endpointName);
+    try {
+        const endpointName = req.params.endpoint;
+        const apiConfig = registeredAPIs.find(a => a.name === endpointName);
 
-    if (!apiConfig) {
-        return res.status(404).json({
-            success: false,
-            error: "Endpoint not found",
-            message: `The endpoint '/api/${endpointName}' does not exist. Visit /api to see available endpoints.`
-        });
-    }
-
-    const inputParams = { ...req.query, ...req.body };
-    
-    let targetValue = null;
-    for (const param of apiConfig.requiredParams) {
-        if (inputParams[param] !== undefined && inputParams[param] !== '') {
-            targetValue = inputParams[param];
-            break;
+        if (!apiConfig) {
+            return res.status(404).json({
+                success: false,
+                error: "Endpoint not found",
+                message: `The endpoint '/api/${endpointName}' does not exist. Visit /api to see available endpoints.`
+            });
         }
-    }
 
-    if (!targetValue) {
-        const fallbackKeys = ['query', 'q', 'number', 'num', 'adhar', 'aadhar', 'email', 'vehicle', 'registration_number', 'username', 'user', 'uid', 'id', 'ifsc', 'pan', 'ip', 'pincode', 'pin', 'term', 'quiry'];
-        for (const key of fallbackKeys) {
-            if (inputParams[key] !== undefined && inputParams[key] !== '') {
-                targetValue = inputParams[key];
+        const inputParams = { ...req.query, ...req.body };
+        
+        let targetValue = null;
+        for (const param of apiConfig.requiredParams) {
+            if (inputParams[param] !== undefined && inputParams[param] !== '') {
+                targetValue = inputParams[param];
                 break;
             }
         }
-    }
 
-    if (!targetValue) {
-        return res.status(400).json({
-            success: false,
-            error: "Missing required parameter",
-            required_parameters: apiConfig.requiredParams,
-            message: `Please supply a valid parameter (e.g., ?${apiConfig.exampleParam}=VALUE)`
+        if (!targetValue) {
+            const fallbackKeys = ['query', 'q', 'number', 'num', 'adhar', 'aadhar', 'email', 'vehicle', 'registration_number', 'username', 'user', 'uid', 'id', 'ifsc', 'pan', 'ip', 'pincode', 'pin', 'term', 'quiry'];
+            for (const key of fallbackKeys) {
+                if (inputParams[key] !== undefined && inputParams[key] !== '') {
+                    targetValue = inputParams[key];
+                    break;
+                }
+            }
+        }
+
+        if (!targetValue) {
+            return res.status(400).json({
+                success: false,
+                error: "Missing required parameter",
+                required_parameters: apiConfig.requiredParams,
+                message: `Please supply a valid parameter (e.g., ?${apiConfig.exampleParam}=VALUE)`
+            });
+        }
+
+        let finalUpstreamUrl = apiConfig.url;
+        const encodedVal = encodeURIComponent(targetValue);
+        
+        apiConfig.requiredParams.forEach(param => {
+            finalUpstreamUrl = finalUpstreamUrl.replace(new RegExp(`\\{${param}\\}`, 'g'), encodedVal);
         });
-    }
 
-    let finalUpstreamUrl = apiConfig.url;
-    const encodedVal = encodeURIComponent(targetValue);
-    
-    apiConfig.requiredParams.forEach(param => {
-        finalUpstreamUrl = finalUpstreamUrl.replace(new RegExp(`\\{${param}\\}`, 'g'), encodedVal);
-    });
-
-    try {
         const axiosConfig = {
             method: apiConfig.method,
             url: finalUpstreamUrl,
-            timeout: 30000,
+            timeout: 25000,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
@@ -423,8 +394,8 @@ app.all('/api/:endpoint', async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             success: false,
-            error: "API request failed",
-            message: "Unable to fetch data from the upstream service or request timed out."
+            error: "Gateway execution error",
+            message: error.message || "An unexpected error occurred while processing the request."
         });
     }
 });
