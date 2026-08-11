@@ -1,91 +1,517 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Gateway Documentation</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0b0f19; color: #f3f4f6; padding: 2rem 1rem; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 2.5rem; }
-        h1 { font-size: 2.25rem; color: #38bdf8; margin-bottom: 0.5rem; }
-        p.subtitle { color: #9ca3af; font-size: 1.05rem; }
-        .brand-info { background: #111827; border: 1px solid #1f2937; padding: 0.75rem 1.5rem; border-radius: 0.5rem; display: inline-block; margin-top: 0.5rem; }
-        .brand-info span { color: #38bdf8; font-weight: bold; }
-        .stats-bar { display: flex; gap: 1rem; margin-bottom: 2rem; justify-content: center; flex-wrap: wrap; }
-        .stat-card { background: #111827; border: 1px solid #1f2937; padding: 1rem 1.5rem; border-radius: 0.5rem; text-align: center; min-width: 120px; }
-        .stat-card .num { font-size: 1.5rem; font-weight: bold; color: #38bdf8; }
-        .stat-card .label { font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
-        .grid { display: grid; gap: 1.25rem; }
-        .card { background: #111827; border: 1px solid #1f2937; border-radius: 0.75rem; padding: 1.25rem 1.5rem; transition: border-color 0.2s; }
-        .card:hover { border-color: #38bdf8; }
-        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
-        .endpoint-title { font-size: 1.15rem; font-weight: bold; color: #ffffff; font-family: monospace; }
-        .method-badge { background: #0369a1; color: #e0f2fe; padding: 0.2rem 0.6rem; border-radius: 0.3rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
-        .desc { color: #9ca3af; font-size: 0.95rem; margin-bottom: 1rem; }
-        .url-box { background: #030712; padding: 0.6rem 0.9rem; border-radius: 0.4rem; font-family: monospace; font-size: 0.85rem; color: #38bdf8; margin-bottom: 0.75rem; word-break: break-all; border: 1px solid #1f2937; }
-        .meta-row { display: flex; gap: 1.5rem; font-size: 0.85rem; color: #9ca3af; margin-bottom: 0.75rem; flex-wrap: wrap; }
-        .meta-row span strong { color: #d1d5db; }
-        .example-box { background: #030712; padding: 0.6rem 0.9rem; border-radius: 0.4rem; font-family: monospace; font-size: 0.85rem; color: #a5b4fc; border: 1px solid #1f2937; word-break: break-all; }
-        .example-box a { color: #38bdf8; text-decoration: none; }
-        .example-box a:hover { text-decoration: underline; }
-        .footer { text-align: center; margin-top: 2rem; color: #6b7280; font-size: 0.85rem; }
-        .footer .brand { color: #38bdf8; }
-        .error-msg { background: #1f2937; border-left: 4px solid #ef4444; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; color: #fca5a5; }
-        @media (max-width: 640px) { body { padding: 1rem 0.5rem; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Gateway — Codex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#050310;
+    --ink:#0B0619;
+    --amethyst:#9B5CFF;
+    --rose:#FF4D9D;
+    --cyan:#35E5D0;
+    --aurum:#F5C77E;
+    --mist:#B9ACD9;
+    --white:#F8F5FF;
+    --line:rgba(155,92,255,.2);
+    --glass:rgba(18,11,38,.62);
+    --pad:clamp(1rem,4vw,2rem);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  [hidden]{display:none!important}
+  html{scroll-behavior:smooth}
+
+  body{
+    font-family:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--void);color:var(--white);min-height:100vh;
+    padding:0 var(--pad) 4rem;position:relative;overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ═══ ambient layers ═══ */
+  #sky{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+  .veil{position:fixed;inset:-30vh -20vw;z-index:0;pointer-events:none;filter:blur(100px);opacity:.5}
+  .veil i{position:absolute;display:block;border-radius:50%}
+  .veil i:nth-child(1){width:52vw;height:52vw;left:-8vw;top:0;background:radial-gradient(circle,#7B2BFF,transparent 68%);animation:drift 28s ease-in-out infinite}
+  .veil i:nth-child(2){width:46vw;height:46vw;right:-10vw;top:26vh;background:radial-gradient(circle,#FF2E8A,transparent 68%);animation:drift 34s ease-in-out infinite reverse}
+  .veil i:nth-child(3){width:40vw;height:40vw;left:30vw;bottom:-10vh;background:radial-gradient(circle,#13C9B4,transparent 70%);opacity:.55;animation:drift 40s ease-in-out infinite}
+  @keyframes drift{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(5vw,-6vh,0) scale(1.15)}}
+
+  .grain{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.045;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  .progress{position:fixed;top:0;left:0;height:2px;width:0;z-index:60;
+    background:linear-gradient(90deg,var(--amethyst),var(--rose),var(--aurum),var(--cyan));
+    box-shadow:0 0 12px rgba(155,92,255,.8)}
+
+  .shell{position:relative;z-index:1;max-width:1120px;margin:0 auto}
+
+  /* ═══ hero ═══ */
+  .hero{text-align:center;padding:clamp(4rem,14vh,8rem) 0 clamp(2rem,6vw,3.5rem)}
+
+  .eyebrow{font-family:"JetBrains Mono",monospace;font-size:.68rem;letter-spacing:.45em;
+    text-transform:uppercase;color:var(--aurum);opacity:0;margin-bottom:1.5rem;
+    animation:fade .9s .2s ease both}
+
+  .title{font-family:"Cormorant Garamond",Georgia,serif;font-weight:300;
+    font-size:clamp(3.2rem,13vw,7.5rem);line-height:.9;letter-spacing:-.025em;
+    position:relative;display:inline-block;padding-bottom:.1em}
+  .title span{display:inline-block;opacity:0;transform:translateY(.4em) rotate(4deg);
+    background:linear-gradient(105deg,#FFF 8%,var(--amethyst) 42%,var(--rose) 64%,var(--aurum) 88%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:letter .8s cubic-bezier(.2,.9,.2,1) both}
+  .title em{font-style:italic}
+  @keyframes letter{to{opacity:1;transform:none}}
+  @keyframes fade{to{opacity:.85}}
+
+  .rule{width:min(340px,64%);height:1px;margin:1.6rem auto;opacity:0;
+    background:linear-gradient(90deg,transparent,var(--amethyst),var(--aurum),transparent);
+    animation:fade 1s 1s ease both}
+
+  .subtitle{color:var(--mist);font-size:clamp(.95rem,2.4vw,1.08rem);max-width:46ch;margin:0 auto;
+    opacity:0;animation:fade 1s 1.15s ease both}
+
+  .ledger{display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap;
+    margin-top:2rem;font-family:"JetBrains Mono",monospace;font-size:.76rem;color:var(--mist);
+    opacity:0;animation:fade 1s 1.3s ease both}
+  .ledger span{display:inline-flex;align-items:center;gap:.5rem}
+  .ledger b{color:var(--white);font-weight:700;font-size:1rem}
+  .ledger .sep{width:4px;height:4px;border-radius:50%;background:var(--line)}
+  .pulse{width:7px;height:7px;border-radius:50%;background:var(--cyan);
+    box-shadow:0 0 0 0 rgba(53,229,208,.6);animation:pulse 2.4s ease-out infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 10px rgba(53,229,208,0)}100%{box-shadow:0 0 0 0 rgba(53,229,208,0)}}
+
+  .sigilbar{display:inline-flex;align-items:center;gap:.8rem;flex-wrap:wrap;justify-content:center;
+    margin-top:1.6rem;padding:.65rem 1.3rem;border-radius:999px;font-size:.85rem;color:var(--mist);
+    border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(14px);
+    opacity:0;animation:fade 1s 1.45s ease both}
+  .sigilbar b{color:var(--white);font-weight:700}
+  .sigilbar .dot{color:var(--amethyst)}
+
+  /* ═══ command bar ═══ */
+  .command{position:sticky;top:1rem;z-index:30;margin-bottom:1.6rem;
+    display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;
+    padding:.65rem .8rem;border-radius:16px;
+    border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(18px);
+    box-shadow:0 18px 50px -30px rgba(0,0,0,.9)}
+
+  .seek{flex:1 1 220px;display:flex;align-items:center;gap:.6rem;
+    background:rgba(5,3,16,.7);border:1px solid rgba(155,92,255,.16);
+    border-radius:11px;padding:.5rem .8rem;transition:border-color .25s,box-shadow .25s}
+  .seek:focus-within{border-color:var(--amethyst);box-shadow:0 0 0 3px rgba(155,92,255,.14)}
+  .seek svg{flex:0 0 auto;stroke:var(--mist);opacity:.7}
+  .seek input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--white);
+    font-family:"Manrope",sans-serif;font-size:.9rem}
+  .seek input::placeholder{color:rgba(185,172,217,.55)}
+  .kbd{font-family:"JetBrains Mono",monospace;font-size:.62rem;color:var(--mist);
+    border:1px solid var(--line);border-radius:5px;padding:.1rem .35rem;opacity:.7}
+
+  .chips{display:flex;gap:.35rem;flex-wrap:wrap}
+  .chip{cursor:pointer;font-family:"JetBrains Mono",monospace;font-size:.68rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--mist);background:transparent;
+    border:1px solid var(--line);border-radius:999px;padding:.35rem .75rem;
+    transition:color .25s,border-color .25s,background .25s}
+  .chip:hover{color:var(--white);border-color:var(--amethyst)}
+  .chip[aria-pressed="true"]{color:var(--void);background:linear-gradient(120deg,var(--amethyst),var(--rose));
+    border-color:transparent;font-weight:700}
+
+  .tally{font-family:"JetBrains Mono",monospace;font-size:.7rem;color:var(--mist);
+    padding-right:.4rem;white-space:nowrap}
+
+  /* ═══ cards ═══ */
+  .codex{display:grid;gap:1.15rem;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+    perspective:1400px}
+
+  .spell{position:relative;padding:1px;border-radius:22px;
+    background:linear-gradient(158deg,rgba(155,92,255,.4),rgba(255,77,157,.14) 55%,rgba(53,229,208,.22));
+    transform-style:preserve-3d;transition:box-shadow .4s,background .4s;
+    opacity:0;transform:translateY(24px)}
+  .spell.seen{opacity:1;transform:none;transition:opacity .7s cubic-bezier(.2,.8,.2,1),transform .7s cubic-bezier(.2,.8,.2,1),box-shadow .4s}
+  .spell:hover,.spell:focus-within{box-shadow:0 28px 60px -28px rgba(155,92,255,.8)}
+  .spell::before{content:"";position:absolute;inset:0;border-radius:22px;opacity:0;transition:opacity .45s;
+    background:conic-gradient(from 140deg,var(--amethyst),var(--rose),var(--aurum),var(--cyan),var(--amethyst))}
+  .spell:hover::before,.spell:focus-within::before{opacity:1}
+
+  .inner{position:relative;z-index:1;border-radius:21px;overflow:hidden;
+    padding:1.45rem 1.5rem 1.55rem;height:100%;
+    background:linear-gradient(158deg,rgba(155,92,255,.09),rgba(11,6,25,.97) 60%),var(--ink)}
+  .inner::before{content:"";position:absolute;inset:0;opacity:0;transition:opacity .35s;pointer-events:none;
+    background:radial-gradient(440px circle at var(--mx,50%) var(--my,50%),rgba(155,92,255,.18),transparent 62%)}
+  .spell:hover .inner::before{opacity:1}
+
+  .crest{display:flex;align-items:center;gap:.95rem;margin-bottom:1rem}
+
+  .sigil{position:relative;flex:0 0 48px;width:48px;height:48px;display:grid;place-items:center;
+    border-radius:50%;background:rgba(5,3,16,.92);
+    font-family:"Cormorant Garamond",Georgia,serif;font-size:1.55rem;color:var(--aurum)}
+  .sigil::before{content:"";position:absolute;inset:-1.5px;border-radius:50%;z-index:-1;opacity:.6;
+    background:conic-gradient(var(--amethyst),var(--rose),var(--aurum),var(--cyan),var(--amethyst));
+    animation:spin 8s linear infinite;animation-play-state:paused;transition:opacity .3s}
+  .spell:hover .sigil::before{animation-play-state:running;opacity:1}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .naming{flex:1;min-width:0}
+  .route{font-family:"JetBrains Mono",monospace;font-size:1rem;font-weight:600;word-break:break-all}
+  .route b{color:var(--amethyst);font-weight:400}
+  .verb{display:inline-block;margin-top:.4rem;padding:.16rem .6rem;border-radius:6px;
+    font-family:"JetBrains Mono",monospace;font-size:.64rem;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;
+    color:var(--cyan);border:1px solid rgba(53,229,208,.34);background:rgba(53,229,208,.09)}
+  .verb.post{color:var(--amethyst);border-color:rgba(155,92,255,.36);background:rgba(155,92,255,.1)}
+  .verb.put,.verb.patch{color:var(--aurum);border-color:rgba(245,199,126,.34);background:rgba(245,199,126,.09)}
+  .verb.delete{color:var(--rose);border-color:rgba(255,77,157,.36);background:rgba(255,77,157,.1)}
+
+  .desc{color:var(--mist);font-size:.92rem;line-height:1.65;margin-bottom:1.15rem}
+
+  .field{margin-bottom:.75rem}
+  .flabel{font-family:"JetBrains Mono",monospace;font-size:.6rem;letter-spacing:.22em;
+    text-transform:uppercase;color:rgba(185,172,217,.6);display:block;margin-bottom:.4rem}
+
+  .wire{display:flex;align-items:center;gap:.6rem;border-radius:11px;padding:.55rem .7rem;
+    background:rgba(5,3,16,.8);border:1px solid rgba(155,92,255,.15)}
+  .wire code{flex:1;min-width:0;font-family:"JetBrains Mono",monospace;font-size:.78rem;
+    color:#DCCDFF;word-break:break-all}
+  .copy{flex:0 0 auto;cursor:pointer;font-family:"JetBrains Mono",monospace;font-size:.6rem;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--aurum);background:transparent;
+    border:1px solid rgba(245,199,126,.3);border-radius:6px;padding:.28rem .55rem;
+    transition:background .25s,transform .15s}
+  .copy:hover{background:rgba(245,199,126,.15)}
+  .copy:active{transform:scale(.94)}
+
+  .runes{display:flex;flex-wrap:wrap;gap:.35rem}
+  .rune{font-family:"JetBrains Mono",monospace;font-size:.72rem;color:var(--aurum);
+    border:1px solid rgba(245,199,126,.28);background:rgba(245,199,126,.07);
+    border-radius:999px;padding:.2rem .65rem}
+  .rune.none{color:rgba(185,172,217,.55);border-color:var(--line);background:transparent}
+
+  .cast{display:inline-flex;align-items:center;gap:.45rem;margin-top:1rem;
+    font-family:"JetBrains Mono",monospace;font-size:.76rem;color:var(--rose);
+    text-decoration:none;border-bottom:1px solid transparent;padding-bottom:1px;word-break:break-all;
+    transition:color .25s,border-color .25s}
+  .cast:hover{color:var(--aurum);border-color:rgba(245,199,126,.5)}
+  .cast::before{content:"↗"}
+
+  /* ═══ empty states ═══ */
+  .hollow{grid-column:1/-1;text-align:center;padding:3.5rem 1.5rem;border-radius:22px;
+    border:1px dashed var(--line);background:rgba(11,6,25,.6)}
+  .hollow h2{font-family:"Cormorant Garamond",Georgia,serif;font-weight:300;font-size:2rem;margin-bottom:.5rem}
+  .hollow p{color:var(--mist);font-size:.92rem}
+
+  /* ═══ chrome ═══ */
+  .toast{position:fixed;left:50%;bottom:2rem;z-index:70;transform:translate(-50%,1.5rem);
+    opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;
+    padding:.6rem 1.1rem;border-radius:999px;font-size:.82rem;
+    border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(16px);
+    box-shadow:0 20px 50px -25px #000}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  .top{position:fixed;right:1.4rem;bottom:1.6rem;z-index:50;width:44px;height:44px;
+    display:grid;place-items:center;cursor:pointer;border-radius:50%;color:var(--white);
+    border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(14px);
+    opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
+  .top.show{opacity:1;pointer-events:auto}
+  .top:hover{transform:translateY(-3px);border-color:var(--amethyst)}
+
+  .foot{margin-top:3.5rem;padding-top:1.6rem;border-top:1px solid var(--line);
+    text-align:center;font-size:.8rem;color:rgba(185,172,217,.7);line-height:1.9}
+  .foot b{color:var(--white);font-weight:600}
+  .foot .mark{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;
+    font-size:1.1rem;color:var(--aurum)}
+
+  a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--aurum);outline-offset:3px}
+
+  @media (max-width:640px){
+    .codex{grid-template-columns:1fr}
+    .inner{padding:1.25rem 1.15rem 1.35rem}
+    .command{top:.5rem;padding:.55rem}
+    .kbd{display:none}
+    .top{right:1rem;bottom:1rem}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    .spell{opacity:1;transform:none}
+    .title span{opacity:1;transform:none}
+    .eyebrow,.rule,.subtitle,.ledger,.sigilbar{opacity:1}
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🚀 API Gateway</h1>
-            <p class="subtitle">Unified Public Endpoints & Auto-Generated Documentation</p>
-            <div class="brand-info">
-                <span>Owner:</span> <%= owner %> | <span>Channel:</span> <%= channel %>
-            </div>
-        </header>
 
-        <div class="stats-bar">
-            <div class="stat-card">
-                <div class="num"><%= apis.length %></div>
-                <div class="label">Total Endpoints</div>
-            </div>
-            <div class="stat-card">
-                <div class="num">✅</div>
-                <div class="label">Gateway Status</div>
-            </div>
-        </div>
+<div class="progress" id="bar"></div>
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="veil" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="grain" aria-hidden="true"></div>
 
-        <div class="grid">
-            <% apis.forEach(api => { %>
-                <div class="card">
-                    <div class="card-header">
-                        <span class="endpoint-title">/api/<%= api.name %></span>
-                        <span class="method-badge"><%= api.method %></span>
-                    </div>
-                    
-                    <div class="desc"><%= api.description %></div>
-                    
-                    <div class="url-box">
-                        <strong>Endpoint:</strong> <%= api.publicUrl %>
-                    </div>
+<%
+  const list = (typeof apis !== 'undefined' && apis) ? apis : [];
+  const methods = Array.from(new Set(list.map(a => String(a.method).toUpperCase())));
+%>
 
-                    <div class="meta-row">
-                        <span><strong>Required Parameters:</strong> <%= api.requiredParams.length ? api.requiredParams.join(', ') : 'None' %></span>
-                    </div>
+<div class="shell">
 
-                    <div class="example-box">
-                        <strong>Example:</strong> <a href="<%= api.example %>" target="_blank"><%= api.example %></a>
-                    </div>
-                </div>
-            <% }) %>
-        </div>
-        
-        <div class="footer">
-            <p>API Gateway v1.0 | All endpoints are public and rate-limited</p>
-            <p class="brand">Owned by <strong><%= owner %></strong> | Channel: <strong><%= channel %></strong></p>
-        </div>
+  <header class="hero">
+    <p class="eyebrow">Gateway Codex</p>
+    <h1 class="title">
+      <span style="animation-delay:.30s">A</span><span style="animation-delay:.36s">P</span><span style="animation-delay:.42s">I</span>
+      <span style="animation-delay:.52s">&nbsp;</span>
+      <em><span style="animation-delay:.58s">G</span><span style="animation-delay:.64s">a</span><span style="animation-delay:.70s">t</span><span style="animation-delay:.76s">e</span><span style="animation-delay:.82s">w</span><span style="animation-delay:.88s">a</span><span style="animation-delay:.94s">y</span></em>
+    </h1>
+    <div class="rule"></div>
+    <p class="subtitle">Every public endpoint, documented the moment it goes live.</p>
+
+    <div class="ledger">
+      <span><b id="count">0</b> endpoints</span>
+      <span class="sep"></span>
+      <span><span class="pulse"></span> Online</span>
+      <span class="sep"></span>
+      <span>Rate limited</span>
     </div>
+
+    <div class="sigilbar">
+      <span>Owner <b><%= owner %></b></span>
+      <span class="dot">✦</span>
+      <span>Channel <b><%= channel %></b></span>
+    </div>
+  </header>
+
+  <% if (list.length) { %>
+  <div class="command">
+    <label class="seek">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="seek" type="search" placeholder="Search endpoints" aria-label="Search endpoints">
+      <span class="kbd">/</span>
+    </label>
+    <div class="chips" id="chips">
+      <button class="chip" type="button" data-m="ALL" aria-pressed="true">All</button>
+      <% methods.forEach(function(m){ %>
+        <button class="chip" type="button" data-m="<%= m %>" aria-pressed="false"><%= m %></button>
+      <% }) %>
+    </div>
+    <span class="tally"><b id="tally"><%= list.length %></b> shown</span>
+  </div>
+  <% } %>
+
+  <main class="codex" id="codex">
+    <% list.forEach(function(api, i){
+         const m = String(api.method).toUpperCase();
+         const params = (api.requiredParams && api.requiredParams.length) ? api.requiredParams.join(' ') : '';
+    %>
+      <article class="spell"
+               data-method="<%= m %>"
+               data-search="<%= (api.name + ' ' + api.description + ' ' + api.publicUrl + ' ' + params).toLowerCase() %>">
+        <div class="inner">
+
+          <div class="crest">
+            <div class="sigil" aria-hidden="true"><%= String(api.name).charAt(0).toUpperCase() %></div>
+            <div class="naming">
+              <div class="route"><b>/api/</b><%= api.name %></div>
+              <span class="verb <%= m.toLowerCase() %>"><%= api.method %></span>
+            </div>
+          </div>
+
+          <p class="desc"><%= api.description %></p>
+
+          <div class="field">
+            <span class="flabel">Endpoint</span>
+            <div class="wire">
+              <code><%= api.publicUrl %></code>
+              <button class="copy" type="button" data-url="<%= api.publicUrl %>" aria-label="Copy endpoint URL">Copy</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="flabel">Required parameters</span>
+            <div class="runes">
+              <% if (api.requiredParams && api.requiredParams.length) { %>
+                <% api.requiredParams.forEach(function(p){ %><span class="rune"><%= p %></span><% }) %>
+              <% } else { %>
+                <span class="rune none">None</span>
+              <% } %>
+            </div>
+          </div>
+
+          <a class="cast" href="<%= api.example %>" target="_blank" rel="noopener"><%= api.example %></a>
+        </div>
+      </article>
+    <% }) %>
+
+    <% if (!list.length) { %>
+      <div class="hollow">
+        <h2>No endpoints yet</h2>
+        <p>Register an endpoint and it will appear here automatically.</p>
+      </div>
+    <% } %>
+
+    <div class="hollow" id="nomatch" hidden>
+      <h2>Nothing matches</h2>
+      <p>Try a different name, or clear the filters.</p>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <p class="mark">API Gateway v1.0</p>
+    <p>All endpoints are public and rate limited.</p>
+    <p>Owned by <b><%= owner %></b> · Channel <b><%= channel %></b></p>
+  </footer>
+</div>
+
+<div class="toast" id="toast">Copied</div>
+<button class="top" id="top" type="button" aria-label="Back to top">↑</button>
+
+<script>
+(function(){
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── starfield ── */
+  var cv = document.getElementById('sky'), cx = cv.getContext('2d');
+  var stars = [], shots = [], w = 0, h = 0, px = 0, py = 0;
+  function resize(){
+    var d = Math.min(devicePixelRatio || 1, 2);
+    w = innerWidth; h = innerHeight;
+    cv.width = w * d; cv.height = h * d;
+    cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    cx.setTransform(d, 0, 0, d, 0, 0);
+    stars = [];
+    var n = Math.min(150, Math.round(w * h / 11000));
+    for (var i = 0; i < n; i++) stars.push({
+      x: Math.random() * w, y: Math.random() * h,
+      r: Math.random() * 1.25 + .25, d: Math.random() * .8 + .2,
+      t: Math.random() * 6.28, s: Math.random() * .015 + .004
+    });
+  }
+  function draw(){
+    cx.clearRect(0, 0, w, h);
+    for (var i = 0; i < stars.length; i++){
+      var s = stars[i]; s.t += s.s;
+      var a = .25 + Math.abs(Math.sin(s.t)) * .65;
+      cx.beginPath();
+      cx.arc(s.x + px * s.d * 22, s.y + py * s.d * 22, s.r, 0, 6.284);
+      cx.fillStyle = 'rgba(' + (s.d > .6 ? '214,198,255' : '245,199,126') + ',' + a + ')';
+      cx.fill();
+    }
+    for (var j = shots.length - 1; j >= 0; j--){
+      var f = shots[j]; f.x += f.vx; f.y += f.vy; f.life--;
+      var g = cx.createLinearGradient(f.x, f.y, f.x - f.vx * 12, f.y - f.vy * 12);
+      g.addColorStop(0, 'rgba(255,255,255,.85)');
+      g.addColorStop(1, 'rgba(155,92,255,0)');
+      cx.strokeStyle = g; cx.lineWidth = 1.6;
+      cx.beginPath(); cx.moveTo(f.x, f.y); cx.lineTo(f.x - f.vx * 12, f.y - f.vy * 12); cx.stroke();
+      if (f.life < 0) shots.splice(j, 1);
+    }
+    requestAnimationFrame(draw);
+  }
+  function shoot(){
+    shots.push({ x: Math.random() * w * .8, y: Math.random() * h * .4, vx: 5 + Math.random() * 3, vy: 2 + Math.random() * 1.5, life: 90 });
+    setTimeout(shoot, 7000 + Math.random() * 9000);
+  }
+  if (!reduce){
+    resize(); addEventListener('resize', resize); draw();
+    setTimeout(shoot, 4000);
+    addEventListener('pointermove', function(e){ px = (e.clientX / innerWidth - .5); py = (e.clientY / innerHeight - .5); });
+  }
+
+  /* ── count up ── */
+  var total = document.querySelectorAll('.spell').length, cEl = document.getElementById('count'), c = 0;
+  (function tick(){
+    c += Math.max(1, Math.ceil((total - c) / 8));
+    if (c >= total){ cEl.textContent = total; return; }
+    cEl.textContent = c; setTimeout(tick, 45);
+  })();
+
+  /* ── reveal ── */
+  var cards = [].slice.call(document.querySelectorAll('.spell'));
+  if ('IntersectionObserver' in window && !reduce){
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e, k){
+        if (e.isIntersecting){
+          setTimeout(function(){ e.target.classList.add('seen'); }, k * 70);
+          io.unobserve(e.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -60px 0px' });
+    cards.forEach(function(c){ io.observe(c); });
+  } else cards.forEach(function(c){ c.classList.add('seen'); });
+
+  /* ── tilt + spotlight ── */
+  if (!reduce && matchMedia('(hover: hover)').matches){
+    cards.forEach(function(card){
+      var inner = card.querySelector('.inner');
+      card.addEventListener('pointermove', function(e){
+        var r = card.getBoundingClientRect();
+        var x = e.clientX - r.left, y = e.clientY - r.top;
+        inner.style.setProperty('--mx', x + 'px');
+        inner.style.setProperty('--my', y + 'px');
+        card.style.transform = 'perspective(1000px) rotateX(' + ((y / r.height - .5) * -5).toFixed(2) + 'deg) rotateY(' + ((x / r.width - .5) * 6).toFixed(2) + 'deg) translateY(-5px)';
+      });
+      card.addEventListener('pointerleave', function(){ card.style.transform = ''; });
+    });
+  }
+
+  /* ── filter ── */
+  var seek = document.getElementById('seek'),
+      chips = document.getElementById('chips'),
+      tally = document.getElementById('tally'),
+      nomatch = document.getElementById('nomatch'),
+      mode = 'ALL';
+
+  function apply(){
+    var q = seek ? seek.value.toLowerCase().trim() : '', n = 0;
+    cards.forEach(function(card){
+      var ok = (!q || card.dataset.search.indexOf(q) > -1) && (mode === 'ALL' || card.dataset.method === mode);
+      card.hidden = !ok;
+      if (ok){ n++; card.classList.add('seen'); }
+    });
+    if (tally) tally.textContent = n;
+    if (nomatch) nomatch.hidden = !(n === 0 && cards.length > 0);
+  }
+  if (seek) seek.addEventListener('input', apply);
+  if (chips) chips.addEventListener('click', function(e){
+    var b = e.target.closest('.chip'); if (!b) return;
+    mode = b.dataset.m;
+    [].forEach.call(chips.children, function(c){ c.setAttribute('aria-pressed', c === b); });
+    apply();
+  });
+  addEventListener('keydown', function(e){
+    if (e.key === '/' && seek && document.activeElement !== seek){ e.preventDefault(); seek.focus(); }
+    if (e.key === 'Escape' && document.activeElement === seek){ seek.value = ''; apply(); seek.blur(); }
+  });
+
+  /* ── copy + toast ── */
+  var toast = document.getElementById('toast'), tt;
+  function say(msg){
+    toast.textContent = msg; toast.classList.add('show');
+    clearTimeout(tt); tt = setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+  }
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var url = btn.dataset.url;
+      var done = function(){ btn.textContent = 'Copied'; say('Endpoint copied'); setTimeout(function(){ btn.textContent = 'Copy'; }, 1500); };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(done);
+      else {
+        var t = document.createElement('textarea'); t.value = url;
+        document.body.appendChild(t); t.select(); document.execCommand('copy');
+        document.body.removeChild(t); done();
+      }
+    });
+  });
+
+  /* ── scroll chrome ── */
+  var bar = document.getElementById('bar'), top = document.getElementById('top');
+  addEventListener('scroll', function(){
+    var max = document.body.scrollHeight - innerHeight;
+    bar.style.width = (max > 0 ? scrollY / max * 100 : 0) + '%';
+    top.classList.toggle('show', scrollY > 420);
+  }, { passive: true });
+  top.addEventListener('click', function(){ scrollTo({ top: 0, behavior: 'smooth' }); });
+})();
+</script>
+
 </body>
 </html>
