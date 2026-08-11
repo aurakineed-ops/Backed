@@ -282,7 +282,7 @@ APIs.forEach(api => {
 // ==========================================
 
 app.get('/health', (req, res) => {
-    res.json({ status: "ok" });
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 app.get('/', (req, res) => {
@@ -304,7 +304,12 @@ app.get('/api', (req, res) => {
             example: `${baseUrl}/api/${api.name}?${api.exampleParam}=${api.exampleVal}`
         }));
 
-        res.render('index', { apis: formattedApis, baseUrl });
+        res.render('index', { 
+            apis: formattedApis, 
+            baseUrl,
+            owner: OWNER,
+            channel: CHANNEL
+        });
     } catch (err) {
         console.error('Template error:', err);
         res.status(500).json({ 
@@ -364,12 +369,15 @@ app.all('/api/:endpoint', async (req, res) => {
             finalUpstreamUrl = finalUpstreamUrl.replace(new RegExp(`\\{${param}\\}`, 'g'), encodedVal);
         });
 
+        console.log(`[${new Date().toISOString()}] Request to: ${finalUpstreamUrl}`);
+
         const axiosConfig = {
             method: apiConfig.method,
             url: finalUpstreamUrl,
-            timeout: 25000,
+            timeout: 30000,
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*'
             },
             validateStatus: function (status) {
                 return status < 600;
@@ -382,26 +390,83 @@ app.all('/api/:endpoint', async (req, res) => {
 
         const response = await axios(axiosConfig);
 
+        // Log response status
+        console.log(`[${new Date().toISOString()}] Response status: ${response.status}`);
+
+        // Check if response has data
+        if (!response.data) {
+            return res.status(500).json({
+                success: false,
+                error: "API returned no data",
+                status: response.status,
+                owner: OWNER,
+                channel: CHANNEL
+            });
+        }
+
+        // Check if response is HTML (error page)
+        if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
+            return res.status(500).json({
+                success: false,
+                error: "API returned HTML error page",
+                message: "The upstream API returned an HTML error page instead of JSON data",
+                owner: OWNER,
+                channel: CHANNEL
+            });
+        }
+
         let cleaned = cleanData(response.data);
+
+        // Check if cleaned data is empty
+        if (!cleaned || (typeof cleaned === 'object' && Object.keys(cleaned).length === 0)) {
+            return res.status(404).json({
+                success: false,
+                error: "No data found",
+                message: "The API returned empty or null data",
+                owner: OWNER,
+                channel: CHANNEL
+            });
+        }
 
         if (cleaned && typeof cleaned === 'object' && !Array.isArray(cleaned)) {
             cleaned.owner = OWNER;
             cleaned.channel = CHANNEL;
+            cleaned.timestamp = new Date().toISOString();
         } else {
             cleaned = {
                 data: cleaned,
                 owner: OWNER,
-                channel: CHANNEL
+                channel: CHANNEL,
+                timestamp: new Date().toISOString()
             };
         }
 
         return res.status(response.status).json(cleaned);
 
     } catch (error) {
+        console.error(`[${new Date().toISOString()}] Error:`, error.message);
+        
+        let errorMessage = error.message || "An unexpected error occurred";
+        let errorDetails = {};
+
+        if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            errorDetails.status = error.response.status;
+            errorDetails.data = error.response.data;
+            errorMessage = `API returned status ${error.response.status}`;
+        } else if (error.request) {
+            // The request was made but no response was received
+            errorMessage = "No response from API server (timeout or network error)";
+        }
+
         return res.status(500).json({
             success: false,
             error: "Gateway execution error",
-            message: error.message || "An unexpected error occurred while processing the request."
+            message: errorMessage,
+            details: errorDetails,
+            owner: OWNER,
+            channel: CHANNEL
         });
     }
 });
@@ -410,6 +475,9 @@ const PORT = process.env.PORT || 3000;
 if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`API Gateway server running on port ${PORT}`);
+        console.log(`Owner: ${OWNER}`);
+        console.log(`Channel: ${CHANNEL}`);
+        console.log(`Total endpoints: ${registeredAPIs.length}`);
     });
 }
 
