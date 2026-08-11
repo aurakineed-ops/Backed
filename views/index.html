@@ -185,6 +185,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .params{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.85rem}
 .param-tag{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--amber);border:1px solid rgba(227,179,65,.23);background:rgba(227,179,65,.06);border-radius:999px;padding:.16rem .55rem}
 .param-none{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--muted2)}
+.param-ex{color:rgba(227,179,65,.55);font-size:.6rem;margin-left:.15rem}
 
 /* card footer */
 .card-foot{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding-top:.85rem;border-top:1px solid rgba(255,255,255,.04)}
@@ -391,12 +392,19 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
     <span class="field-label">Parameters</span>
     <div class="params">
       <% if (api.requiredParams && api.requiredParams.length) { %>
-        <% api.requiredParams.forEach(function(p){ %><span class="param-tag"><%= p %></span><% }) %>
+        <% api.requiredParams.forEach(function(p){ %>
+          <span class="param-tag" title="example: <%= (api.paramExamples && api.paramExamples[p]) ? api.paramExamples[p] : '' %>">
+            <%= p %>
+            <% if (api.paramExamples && api.paramExamples[p]) { %>
+              <span class="param-ex">= <%= api.paramExamples[p] %></span>
+            <% } %>
+          </span>
+        <% }) %>
       <% } else { %><span class="param-none">None</span><% } %>
     </div>
 
     <div class="card-foot">
-      <a class="try-link" href="<%= api.example %>" target="_blank" rel="noopener"><%= api.example %></a>
+      <a class="try-link" href="<%= api.example %>" target="_blank" rel="noopener"><%= api.publicUrl %>?<%= api.exampleQuery || (api.requiredParams && api.requiredParams.length ? api.requiredParams[0]+'=...' : '') %></a>
       <button class="test-btn" type="button" data-ep="<%= api.name %>" data-url="<%= api.example %>">Test</button>
     </div>
   </div>
