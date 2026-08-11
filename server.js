@@ -3,7 +3,11 @@ const axios = require('axios');
 const cors = require('cors');
 
 const app = express();
-app.set('view engine', 'ejs');
+
+// Configure Express to render EJS inside .html files
+app.engine('html', require('ejs').renderFile);
+app.set('view engine', 'html');
+app.set('views', __dirname);
 
 // Security, CORS, and Body Parsers (Zero artificial rate limiting)
 app.use(cors());
@@ -74,7 +78,6 @@ const badSubstrings = [
 
 const removeFieldsLower = new Set(removeFields.map(f => f.toLowerCase()));
 
-// Recursive response cleaning function
 function cleanData(obj) {
     if (!obj || typeof obj !== 'object') {
         if (typeof obj === 'string') {
@@ -98,7 +101,7 @@ function cleanData(obj) {
     const cleaned = {};
     for (const key of Object.keys(obj)) {
         if (removeFieldsLower.has(key.toLowerCase())) {
-            continue; // Skip unwanted promotional/credit fields
+            continue;
         }
         const cleanedValue = cleanData(obj[key]);
         if (cleanedValue !== null && cleanedValue !== undefined && cleanedValue !== '') {
@@ -392,7 +395,7 @@ app.all('/api/:endpoint', async (req, res) => {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
             validateStatus: function (status) {
-                return status < 600; // Forward upstream status codes accurately
+                return status < 600;
             }
         };
 
@@ -402,10 +405,8 @@ app.all('/api/:endpoint', async (req, res) => {
 
         const response = await axios(axiosConfig);
 
-        // 1. Clean response data recursively
         let cleaned = cleanData(response.data);
 
-        // 2. Inject custom branding fields (owner & channel) at the root level
         if (cleaned && typeof cleaned === 'object' && !Array.isArray(cleaned)) {
             cleaned.owner = OWNER;
             cleaned.channel = CHANNEL;
