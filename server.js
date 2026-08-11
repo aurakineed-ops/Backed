@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 
-// Configure Express to render EJS inside .html files safely from views folder
+// Configure Express to render EJS inside .html files
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
@@ -304,6 +304,7 @@ app.get('/api', (req, res) => {
             example: `${baseUrl}/api/${api.name}?${api.exampleParam}=${api.exampleVal}`
         }));
 
+        // Pass all data to your index.html template
         res.render('index', { 
             apis: formattedApis, 
             baseUrl,
@@ -390,10 +391,8 @@ app.all('/api/:endpoint', async (req, res) => {
 
         const response = await axios(axiosConfig);
 
-        // Log response status
         console.log(`[${new Date().toISOString()}] Response status: ${response.status}`);
 
-        // Check if response has data
         if (!response.data) {
             return res.status(500).json({
                 success: false,
@@ -404,7 +403,6 @@ app.all('/api/:endpoint', async (req, res) => {
             });
         }
 
-        // Check if response is HTML (error page)
         if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
             return res.status(500).json({
                 success: false,
@@ -417,7 +415,6 @@ app.all('/api/:endpoint', async (req, res) => {
 
         let cleaned = cleanData(response.data);
 
-        // Check if cleaned data is empty
         if (!cleaned || (typeof cleaned === 'object' && Object.keys(cleaned).length === 0)) {
             return res.status(404).json({
                 success: false,
@@ -450,13 +447,10 @@ app.all('/api/:endpoint', async (req, res) => {
         let errorDetails = {};
 
         if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
             errorDetails.status = error.response.status;
             errorDetails.data = error.response.data;
             errorMessage = `API returned status ${error.response.status}`;
         } else if (error.request) {
-            // The request was made but no response was received
             errorMessage = "No response from API server (timeout or network error)";
         }
 
