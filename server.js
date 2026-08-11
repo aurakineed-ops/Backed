@@ -3,306 +3,436 @@ const axios = require('axios');
 const cors = require('cors');
 
 const app = express();
+app.set('view engine', 'ejs');
+
+// Security, CORS, and Body Parsers (Zero artificial rate limiting)
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// =============================================
-// 📝 UNIQUE APIS CONFIGURATION (Updated with your key)
-// =============================================
+// ==========================================
+// CUSTOM BRANDING & CLEANING CONFIGURATION
+// ==========================================
+const OWNER = "@yourusername";
+const CHANNEL = "@yourchannel";
 
-const APIS = {
-    // 🔥 LEAK OSINT
-    'leakpro': 'https://raxxosint.onrender.com/leakosint?key=Customer&quiry={query}',
-    
-    // 📱 NUMBER BASED
-    'num': 'https://osint.invalidayushh.workers.dev/num?key=Sahil&q={number}',
-    'num-new': 'https://leakapi.dpdns.org/search?q={number}',
-    'num-india': 'https://ft-osint-api.duckdns.org/api/number?key=sahil-new&num={number}',
-    'num-pak': 'https://ft-osint-api.duckdns.org/api/pk?key=sahil-new&number={number}',
-    'telegram-num': 'https://tg-to-num-ten.vercel.app/tg?key=sahil_X&num={number}',
-    
-    // 👨‍👩‍👧‍👦 FAMILY / AADHAR
-    'adhar': 'https://osint.invalidayushh.workers.dev/adhar?key=Sahil&q={adhar}',
-    'family': 'https://ayaanmods.site/family.php?key=YOUR_SUBHXCO_KEY&term={adhar}',
-    
-    // 📧 EMAIL
-    'email': 'https://osint.invalidayushh.workers.dev/email?key=Sahil&q={email}',
-    
-    // 🚗 VEHICLE
-    'vehicle': 'https://leakapi.dpdns.org/vehicle-info?registration_number={vehicle}',
-    'vehicle-detail': 'https://leakapi.dpdns.org/api/vehicle?vehicle={vehicle}',
-    'rc': 'https://leakapi.dpdns.org/rc?registration_number={vehicle}',
-    
-    // 📱 SOCIAL MEDIA
-    'insta': 'https://osint.invalidayushh.workers.dev/insta?key=Sahil&q={username}',
-    'telegram': 'https://tg-to-num-ten.vercel.app/tg?key=sahil_X&num={username}',
-    'github': 'https://ft-osint-api.duckdns.org/api/git?key=sahil-new&username={username}',
-    
-    // 🎮 GAMING
-    'bgmi': 'https://ft-osint-api.duckdns.org/api/bgmi?key=sahil-new&uid={uid}',
-    'freefire': 'https://ft-osint-api.duckdns.org/api/ff?key=sahil-new&uid={uid}',
-    
-    // 🏦 FINANCIAL
-    'bank': 'https://ft-osint-api.duckdns.org/api/ifsc?key=sahil-new&ifsc={ifsc}',
-    'pan': 'https://ft-osint-api.duckdns.org/api/pan?key=sahil-new&pan={pan}',
-    
-    // 🌐 OTHER
-    'ip': 'https://ft-osint-api.duckdns.org/api/ip?key=sahil-new&ip={ip}',
-    'pincode': 'https://ft-osint-api.duckdns.org/api/pincode?key=sahil-new&pin={pincode}',
-};
-
-// =============================================
-// 🧹 CLEAN RESPONSE UTILITY
-// =============================================
-
-const REMOVE_FIELDS = [
-    'owner', 'OWNER', 'channel', 'CHANNEL', 'telegram', 'contact',
-    'instagram', 'twitter', 'fb', 'facebook', 'website', 'github',
-    'created_by', 'createdBy', 'owner_username', 'owner_channel',
-    'credit', 'Credits', 'Credit', 'Source', 'source', 'provider',
-    'Provider', 'api_source', 'API_Source', 'developer', 'Developer',
-    'dev', 'Dev', 'invalidayushh', 'ftgamerv2', 'ftgamer2',
-    '@invalidayushh', '@ftgamerv2', '@ftgamer2', 'InvalidAyush',
-    '@InvalidAyush', 'invalidayush', '@invalidayush', 'DM TO BUY ACCESS',
-    'xtradeep', 'Kon_Hu_Mai', 'support', '@raxusss', 'raxusss', 'Raxusss',
-    'Support', 'help', 'Help', 'key', 'KEY', 'api_key', 'API_KEY'
+const removeFields = [
+  'owner', 'OWNER',
+  'channel', 'CHANNEL',
+  'telegram',
+  'contact',
+  'instagram',
+  'twitter',
+  'fb',
+  'facebook',
+  'website',
+  'github',
+  'created_by',
+  'createdBy',
+  'owner_username',
+  'owner_channel',
+  'credit',
+  'Credits',
+  'Credit',
+  'Source',
+  'source',
+  'provider',
+  'Provider',
+  'api_source',
+  'API_Source',
+  'developer',
+  'Developer',
+  'dev',
+  'Dev',
+  'invalidayushh',
+  'ftgamerv2',
+  'ftgamer2',
+  '@invalidayushh',
+  '@ftgamerv2',
+  '@ftgamer2',
+  'InvalidAyush',
+  '@InvalidAyush',
+  'invalidayush',
+  '@invalidayush',
+  'DM TO BUY ACCESS',
+  'xtradeep',
+  'Kon_Hu_Mai',
+  'support',
+  '@raxusss',
+  'raxusss',
+  'Raxusss',
+  'Support',
+  'help',
+  'Help'
 ];
 
-function cleanData(data) {
-    if (!data || typeof data !== 'object') return data;
-    const cleaned = JSON.parse(JSON.stringify(data));
-    
-    const clean = (obj) => {
-        if (!obj || typeof obj !== 'object') return;
-        for (let key of Object.keys(obj)) {
-            if (REMOVE_FIELDS.includes(key)) {
-                delete obj[key];
-            } else if (typeof obj[key] === 'object') {
-                clean(obj[key]);
+const badSubstrings = [
+  '@raxusss', 'raxusss', 'Raxusss', 
+  'InvalidAyush', '@InvalidAyush', 'invalidayush', '@invalidayush', 
+  'ftgamerv2', 'ftgamer2', '@ftgamerv2', '@ftgamer2', '@simpleguy444'
+];
+
+const removeFieldsLower = new Set(removeFields.map(f => f.toLowerCase()));
+
+// Recursive response cleaning function
+function cleanData(obj) {
+    if (!obj || typeof obj !== 'object') {
+        if (typeof obj === 'string') {
+            let val = obj;
+            for (const sub of badSubstrings) {
+                const regex = new RegExp(sub, 'gi');
+                val = val.replace(regex, '').trim();
             }
+            return val;
         }
-    };
-    clean(cleaned);
+        return obj;
+    }
+
+    if (Array.isArray(obj)) {
+        return obj.map(item => cleanData(item)).filter(item => {
+            if (typeof item === 'string' && item === '') return false;
+            return true;
+        });
+    }
+
+    const cleaned = {};
+    for (const key of Object.keys(obj)) {
+        if (removeFieldsLower.has(key.toLowerCase())) {
+            continue; // Skip unwanted promotional/credit fields
+        }
+        const cleanedValue = cleanData(obj[key]);
+        if (cleanedValue !== null && cleanedValue !== undefined && cleanedValue !== '') {
+            cleaned[key] = cleanedValue;
+        } else if (cleanedValue === 0 || cleanedValue === false || cleanedValue === true) {
+            cleaned[key] = cleanedValue;
+        }
+    }
     return cleaned;
 }
 
-// =============================================
-// 🔧 MAIN PROXY HANDLER
-// =============================================
+// ==========================================
+// CENTRALIZED API CONFIGURATION
+// ==========================================
+const APIs = [
+  {
+    url: "https://rootx-osint.in/?type=tg_num&key=sahil_X&query={query}",
+    method: "GET",
+    description: "Telegram number lookup"
+  },
+  {
+    url: "https://raxxosint.onrender.com/leakosint?key=Customer&quiry={query}",
+    method: "GET",
+    description: "Leak OSINT search query lookup"
+  },
+  {
+    url: "https://osint.invalidayushh.workers.dev/num?key=Sahil&q={number}",
+    method: "GET",
+    description: "Mobile number intelligence lookup"
+  },
+  {
+    url: "https://leakapi.dpdns.org/search?q={number}",
+    method: "GET",
+    description: "New database number search"
+  },
+  {
+    name: "num-india",
+    url: "https://ft-osint-api.duckdns.org/api/number?key=sahil-new&num={number}",
+    method: "GET",
+    description: "India phone number database lookup"
+  },
+  {
+    name: "num-pak",
+    url: "https://ft-osint-api.duckdns.org/api/pk?key=sahil-new&number={number}",
+    method: "GET",
+    description: "Pakistan phone number database lookup"
+  },
+  {
+    url: "https://tg-to-num-ten.vercel.app/tg?key=sahil_X&num={number}",
+    method: "GET",
+    description: "Telegram to phone number lookup"
+  },
+  {
+    url: "https://osint.invalidayushh.workers.dev/adhar?key=Sahil&q={adhar}",
+    method: "GET",
+    description: "Identification record lookup"
+  },
+  {
+    url: "https://ayaanmods.site/family.php?key=YOUR_SUBHXCO_KEY&term={adhar}",
+    method: "GET",
+    description: "Family tree and demographic record lookup"
+  },
+  {
+    url: "https://osint.invalidayushh.workers.dev/email?key=Sahil&q={email}",
+    method: "GET",
+    description: "Email breach and record lookup"
+  },
+  {
+    url: "https://leakapi.dpdns.org/vehicle-info?registration_number={vehicle}",
+    method: "GET",
+    description: "Vehicle registration details lookup"
+  },
+  {
+    url: "https://leakapi.dpdns.org/api/vehicle?vehicle={vehicle}",
+    method: "GET",
+    description: "Detailed vehicle intelligence record"
+  },
+  {
+    url: "https://leakapi.dpdns.org/rc?registration_number={vehicle}",
+    method: "GET",
+    description: "Registration Certificate (RC) lookup"
+  },
+  {
+    url: "https://osint.invalidayushh.workers.dev/insta?key=Sahil&q={username}",
+    method: "GET",
+    description: "Instagram account intelligence lookup"
+  },
+  {
+    name: "telegram-user",
+    url: "https://tg-to-num-ten.vercel.app/tg?key=sahil_X&num={username}",
+    method: "GET",
+    description: "Telegram user intelligence lookup"
+  },
+  {
+    url: "https://ft-osint-api.duckdns.org/api/git?key=sahil-new&username={username}",
+    method: "GET",
+    description: "GitHub profile intelligence lookup"
+  },
+  {
+    url: "https://ft-osint-api.duckdns.org/api/bgmi?key=sahil-new&uid={uid}",
+    method: "GET",
+    description: "BGMI player ID intelligence lookup"
+  },
+  {
+    url: "https://ft-osint-api.duckdns.org/api/ff?key=sahil-new&uid={uid}",
+    method: "GET",
+    description: "Free Fire player ID intelligence lookup"
+  },
+  {
+    url: "https://ft-osint-api.duckdns.org/api/ifsc?key=sahil-new&ifsc={ifsc}",
+    method: "GET",
+    description: "Bank IFSC code details lookup"
+  },
+  {
+    url: "https://ft-osint-api.duckdns.org/api/pan?key=sahil-new&pan={pan}",
+    method: "GET",
+    description: "PAN card record intelligence lookup"
+  },
+  {
+    url: "https://ft-osint-api.duckdns.org/api/ip?key=sahil-new&ip={ip}",
+    method: "GET",
+    description: "IP geolocation and intelligence lookup"
+  },
+  {
+    url: "https://ft-osint-api.duckdns.org/api/pincode?key=sahil-new&pin={pincode}",
+    method: "GET",
+    description: "Postal pincode geographic lookup"
+  }
+];
 
-app.all('/api/:endpoint', async (req, res) => {
-    const endpoint = req.params.endpoint;
-    const apiUrl = APIS[endpoint];
-    
-    if (!apiUrl) {
-        return res.status(404).json({
-            success: false,
-            error: `❌ Endpoint '${endpoint}' not found`,
-            available_endpoints: Object.keys(APIS)
-        });
-    }
-    
-    const params = { ...req.query, ...req.body };
-    
-    const paramMap = {
-        'num': ['number', 'num', 'q', 'query'],
-        'num-new': ['number', 'num', 'q', 'query'],
-        'num-india': ['number', 'num', 'q', 'query', 'num'],
-        'num-pak': ['number', 'num', 'q', 'query', 'number'],
-        'telegram-num': ['number', 'num', 'q', 'query'],
-        'adhar': ['adhar', 'aadhar', 'number', 'q', 'query'],
-        'family': ['adhar', 'aadhar', 'number', 'term', 'q', 'query'],
-        'email': ['email', 'q', 'query'],
-        'vehicle': ['vehicle', 'registration_number', 'q', 'query'],
-        'vehicle-detail': ['vehicle', 'v', 'q', 'query'],
-        'rc': ['vehicle', 'registration_number', 'q', 'query'],
-        'insta': ['username', 'user', 'q', 'query'],
-        'telegram': ['username', 'user', 'q', 'query'],
-        'github': ['username', 'user', 'q', 'query'],
-        'bgmi': ['uid', 'id', 'q', 'query'],
-        'freefire': ['uid', 'id', 'q', 'query'],
-        'bank': ['ifsc', 'q', 'query'],
-        'pan': ['pan', 'q', 'query'],
-        'ip': ['ip', 'q', 'query'],
-        'pincode': ['pincode', 'pin', 'q', 'query'],
-        'leakpro': ['number', 'num', 'q', 'query', 'quiry']
-    };
-    
-    const possibleKeys = paramMap[endpoint] || ['q', 'query', 'number', 'num', 'username'];
-    let value = null;
-    
-    for (let key of possibleKeys) {
-        if (params[key] !== undefined && params[key] !== '') {
-            value = params[key];
-            break;
-        }
-    }
-    
-    if (!value) {
-        return res.status(400).json({
-            success: false,
-            error: `❌ Missing required query parameter for this endpoint.`,
-            expected_one_of: possibleKeys,
-            example: `/api/${endpoint}?${possibleKeys[0]}=VALUE`
-        });
-    }
-    
-    let url = apiUrl;
-    const encodedVal = encodeURIComponent(value);
-    
-    const replacements = {
-        '{query}': encodedVal,
-        '{number}': encodedVal,
-        '{num}': encodedVal,
-        '{adhar}': encodedVal,
-        '{email}': encodedVal,
-        '{vehicle}': encodedVal,
-        '{username}': encodedVal,
-        '{uid}': encodedVal,
-        '{ifsc}': encodedVal,
-        '{pan}': encodedVal,
-        '{ip}': encodedVal,
-        '{pincode}': encodedVal,
-        '{pin}': encodedVal
-    };
-    
-    for (let [placeholder, val] of Object.entries(replacements)) {
-        url = url.replace(new RegExp(placeholder, 'g'), val);
+// ==========================================
+// AUTOMATIC ENDPOINT NAMING LOGIC
+// ==========================================
+function generateEndpointName(api, existingNames) {
+    if (api.name) {
+        return api.name.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     }
     
     try {
-        console.log(`📡 Proxying [${endpoint}] → ${url}`);
+        const cleanUrl = api.url.replace(/\{[^}]+\}/g, 'placeholder');
+        const urlObj = new URL(cleanUrl);
         
-        const response = await axios({
-            method: req.method,
-            url: url,
-            timeout: 25000,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'application/json, text/plain, */*'
-            },
-            validateStatus: function (status) {
-                return status < 500;
-            }
+        const typeParam = urlObj.searchParams.get('type');
+        if (typeParam) {
+            let base = typeParam.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+            if (!existingNames.has(base)) return base;
+        }
+
+        const segments = urlObj.pathname.split('/').filter(Boolean);
+        const filtered = segments.filter(s => !['api', 'v1', 'v2', 'index.php'].includes(s.toLowerCase()));
+        
+        let candidate = filtered[filtered.length - 1] || segments[segments.length - 1] || 'api';
+        candidate = candidate.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+
+        let finalName = candidate;
+        let counter = 1;
+        while (existingNames.has(finalName)) {
+            finalName = `${candidate}-${counter}`;
+            counter++;
+        }
+        return finalName;
+    } catch (e) {
+        let fallback = 'endpoint';
+        let finalName = fallback;
+        let counter = 1;
+        while (existingNames.has(finalName)) {
+            finalName = `${fallback}-${counter}`;
+            counter++;
+        }
+        return finalName;
+    }
+}
+
+const registeredAPIs = [];
+const nameSet = new Set();
+
+APIs.forEach(api => {
+    const autoName = generateEndpointName(api, nameSet);
+    nameSet.add(autoName);
+
+    const matches = api.url.match(/\{([^}]+)\}/g);
+    const required = matches ? matches.map(m => m.replace(/[{}]/g, '')) : [];
+    const exampleParam = required[0] || 'query';
+    
+    let exampleVal = '12345678';
+    if (exampleParam.includes('number') || exampleParam.includes('num')) exampleVal = '9876543210';
+    if (exampleParam.includes('vehicle')) exampleVal = 'DL01AB1234';
+    if (exampleParam.includes('email')) exampleVal = 'test@example.com';
+    if (exampleParam.includes('username')) exampleVal = 'john_doe';
+    if (exampleParam.includes('ifsc')) exampleVal = 'SBIN0001234';
+    if (exampleParam.includes('pan')) exampleVal = 'ABCDE1234F';
+    if (exampleParam.includes('ip')) exampleVal = '8.8.8.8';
+    if (exampleParam.includes('pincode') || exampleParam.includes('pin')) exampleVal = '110001';
+    if (exampleParam.includes('adhar')) exampleVal = '123456789012';
+    if (exampleParam.includes('uid')) exampleVal = '123456789';
+
+    registeredAPIs.push({
+        name: autoName,
+        url: api.url,
+        method: api.method || 'GET',
+        description: api.description || 'API endpoint',
+        requiredParams: required,
+        exampleParam: exampleParam,
+        exampleVal: exampleVal
+    });
+});
+
+// ==========================================
+// ROUTES
+// ==========================================
+
+app.get('/health', (req, res) => {
+    res.json({ status: "ok" });
+});
+
+app.get('/', (req, res) => {
+    res.redirect('/api');
+});
+
+app.get('/api', (req, res) => {
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.get('host');
+    const baseUrl = `${protocol}://${host}`;
+
+    const formattedApis = registeredAPIs.map(api => ({
+        name: api.name,
+        method: api.method,
+        description: api.description,
+        publicUrl: `${baseUrl}/api/${api.name}`,
+        requiredParams: api.requiredParams,
+        example: `${baseUrl}/api/${api.name}?${api.exampleParam}=${api.exampleVal}`
+    }));
+
+    res.render('index', { apis: formattedApis, baseUrl });
+});
+
+app.all('/api/:endpoint', async (req, res) => {
+    const endpointName = req.params.endpoint;
+    const apiConfig = registeredAPIs.find(a => a.name === endpointName);
+
+    if (!apiConfig) {
+        return res.status(404).json({
+            success: false,
+            error: "Endpoint not found",
+            message: `The endpoint '/api/${endpointName}' does not exist. Visit /api to see available endpoints.`
         });
-        
-        let data = response.data;
-        if (typeof data === 'string') {
-            try { 
-                data = JSON.parse(data); 
-            } catch (e) {
-                data = { raw_response: data };
+    }
+
+    const inputParams = { ...req.query, ...req.body };
+    
+    let targetValue = null;
+    for (const param of apiConfig.requiredParams) {
+        if (inputParams[param] !== undefined && inputParams[param] !== '') {
+            targetValue = inputParams[param];
+            break;
+        }
+    }
+
+    if (!targetValue) {
+        const fallbackKeys = ['query', 'q', 'number', 'num', 'adhar', 'aadhar', 'email', 'vehicle', 'registration_number', 'username', 'user', 'uid', 'id', 'ifsc', 'pan', 'ip', 'pincode', 'pin', 'term', 'quiry'];
+        for (const key of fallbackKeys) {
+            if (inputParams[key] !== undefined && inputParams[key] !== '') {
+                targetValue = inputParams[key];
+                break;
             }
         }
-        
-        return res.status(response.status).json({
-            success: true,
-            endpoint: endpoint,
-            query: value,
-            data: cleanData(data)
+    }
+
+    if (!targetValue) {
+        return res.status(400).json({
+            success: false,
+            error: "Missing required parameter",
+            required_parameters: apiConfig.requiredParams,
+            message: `Please supply a valid parameter (e.g., ?${apiConfig.exampleParam}=VALUE)`
         });
-        
+    }
+
+    let finalUpstreamUrl = apiConfig.url;
+    const encodedVal = encodeURIComponent(targetValue);
+    
+    apiConfig.requiredParams.forEach(param => {
+        finalUpstreamUrl = finalUpstreamUrl.replace(new RegExp(`\\{${param}\\}`, 'g'), encodedVal);
+    });
+
+    try {
+        const axiosConfig = {
+            method: apiConfig.method,
+            url: finalUpstreamUrl,
+            timeout: 30000,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
+            validateStatus: function (status) {
+                return status < 600; // Forward upstream status codes accurately
+            }
+        };
+
+        if (['POST', 'PUT', 'PATCH'].includes(axiosConfig.method.toUpperCase())) {
+            axiosConfig.data = req.body;
+        }
+
+        const response = await axios(axiosConfig);
+
+        // 1. Clean response data recursively
+        let cleaned = cleanData(response.data);
+
+        // 2. Inject custom branding fields (owner & channel) at the root level
+        if (cleaned && typeof cleaned === 'object' && !Array.isArray(cleaned)) {
+            cleaned.owner = OWNER;
+            cleaned.channel = CHANNEL;
+        } else {
+            cleaned = {
+                data: cleaned,
+                owner: OWNER,
+                channel: CHANNEL
+            };
+        }
+
+        return res.status(response.status).json(cleaned);
+
     } catch (error) {
-        console.error(`❌ Error on endpoint [${endpoint}]:`, error.message);
         return res.status(500).json({
             success: false,
-            endpoint: endpoint,
-            error: error.message,
-            hint: "Upstream API may be offline, timed out, or blocked."
+            error: "API request failed",
+            message: "Unable to fetch data from the upstream service or request timed out."
         });
     }
 });
 
-// =============================================
-// 📋 ENDPOINTS LIST ROUTE
-// =============================================
-
-app.get('/api/list', (req, res) => {
-    const list = Object.keys(APIS).map(name => {
-        return {
-            name: name,
-            url_pattern: `/api/${name}`
-        };
-    });
-    
-    res.json({
-        success: true,
-        total_apis: list.length,
-        apis: list
-    });
-});
-
-// =============================================
-// 🏠 HOME PAGE HTML
-// =============================================
-
-app.get('/', (req, res) => {
-    const html = Object.keys(APIS).map(name => {
-        return `<li><b>/api/${name}</b></li>`;
-    }).join('');
-    
-    res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>🚀 Active API Proxy Gateway</title>
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { background: #0a0e1a; color: #e0e0e0; font-family: Arial, sans-serif; padding: 20px; }
-                .container { max-width: 900px; margin: auto; }
-                h1 { color: #00d4ff; text-align: center; font-size: 2.5rem; margin-bottom: 10px; }
-                .subtitle { text-align: center; color: #8892b0; margin-bottom: 30px; }
-                .box { background: #141b2d; border: 1px solid #1e2a45; border-radius: 12px; padding: 25px; }
-                .box h3 { color: #00d4ff; margin-bottom: 15px; }
-                .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
-                li { padding: 8px 12px; border-bottom: 1px solid #1e2a45; list-style: none; font-size: 14px; }
-                li:hover { background: #1a2340; }
-                .stats { display: flex; gap: 20px; justify-content: center; margin: 20px 0; }
-                .stat { background: #141b2d; padding: 10px 25px; border-radius: 8px; border: 1px solid #1e2a45; text-align: center; }
-                .stat .num { color: #00d4ff; font-size: 24px; font-weight: bold; }
-                .stat .label { color: #8892b0; font-size: 12px; }
-                .example { background: #0a0e1a; padding: 15px; border-radius: 6px; margin-top: 20px; color: #fbbf24; font-size: 13px; }
-                .footer { text-align: center; margin-top: 30px; color: #4a5568; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🚀 Active API Proxy Gateway</h1>
-                <p class="subtitle">${Object.keys(APIS).length} Proxied Endpoints Operational</p>
-                
-                <div class="stats">
-                    <div class="stat"><div class="num">${Object.keys(APIS).length}</div><div class="label">Total Endpoints</div></div>
-                    <div class="stat"><div class="num">ONLINE</div><div class="label">Status</div></div>
-                </div>
-                
-                <div class="box">
-                    <h3>📡 Route List:</h3>
-                    <ul>${html}</ul>
-                    
-                    <div class="example">
-                        <strong>🔍 Usage Example:</strong><br>
-                        /api/num?number=9876543210<br>
-                        /api/email?email=test@gmail.com
-                    </div>
-                </div>
-                
-                <div class="footer">
-                    💡 View full list JSON at <a href="/api/list" style="color: #00d4ff;">/api/list</a>
-                </div>
-            </div>
-        </body>
-        </html>
-    `);
-});
-
-module.exports = app;
-
+const PORT = process.env.PORT || 3000;
 if (require.main === module) {
-    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-        console.log(`\n🚀 Proxy Server running on http://localhost:${PORT}`);
-        console.log(`📡 Loaded ${Object.keys(APIS).length} Endpoints successfully with key 'sahil-new'.\n`);
+        console.log(`API Gateway server running on port ${PORT}`);
     });
 }
+
+module.exports = app;
