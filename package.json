@@ -4,12 +4,16 @@
   "description": "Unified API Gateway with Response Cleaning and Custom Branding",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "axios": "^1.7.9",
     "cors": "^2.8.5",
     "ejs": "^3.1.10",
     "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }
