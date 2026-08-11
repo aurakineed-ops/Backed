@@ -403,9 +403,15 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
       <% } else { %><span class="param-none">None</span><% } %>
     </div>
 
+    <span class="field-label" style="margin-top:.1rem">Example Request</span>
+    <div class="url-row" style="margin-bottom:.85rem">
+      <code style="color:#86efac;font-size:.67rem"><%= api.publicUrl %>?<%= api.exampleQuery || '' %></code>
+      <button class="copy-btn" type="button" data-url="<%= api.example %>">Copy</button>
+      <a href="<%= api.example %>" target="_blank" rel="noopener" style="flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);text-decoration:none;border:1px solid rgba(88,166,255,.25);border-radius:5px;padding:.2rem .48rem;transition:background .2s;white-space:nowrap" onmouseover="this.style.background='rgba(88,166,255,.1)'" onmouseout="this.style.background='transparent'">↗ Open</a>
+    </div>
+
     <div class="card-foot">
-      <a class="try-link" href="<%= api.example %>" target="_blank" rel="noopener"><%= api.publicUrl %>?<%= api.exampleQuery || (api.requiredParams && api.requiredParams.length ? api.requiredParams[0]+'=...' : '') %></a>
-      <button class="test-btn" type="button" data-ep="<%= api.name %>" data-url="<%= api.example %>">Test</button>
+      <button class="test-btn" type="button" data-ep="<%= api.name %>" data-url="<%= api.example %>">▶ Test Live</button>
     </div>
   </div>
 
