@@ -80,29 +80,37 @@ function cleanData(obj) {
 }
 
 // ─── APIs ────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+// PERMANENT ENDPOINT REGISTRY
+// name = your fixed /api/<name> — NEVER changes
+// url  = backend — swap freely anytime
+// ══════════════════════════════════════════════════════════
 const APIs = [
-  { url: "https://rootx-osint.in/?type=tg_num&key=sahil_X&query={query}",                              method: "GET", description: "Telegram number lookup" },
-  { url: "https://raxxosint.onrender.com/leakosint?key=Customer&quiry={query}",                         method: "GET", description: "Leak OSINT search query lookup" },
-  { url: "https://osint.invalidayushh.workers.dev/num?key=Rack&q={number}",                             method: "GET", description: "Mobile number intelligence lookup" },
-  { url: "https://leakapi.dpdns.org/search?q={number}",                                                 method: "GET", description: "New database number search" },
-  { name: "num-india", url: "https://ft-osint-api.duckdns.org/api/number?key=sahil-new&num={number}",  method: "GET", description: "India phone number database lookup" },
-  { name: "num-pak",   url: "https://ft-osint-api.duckdns.org/api/pk?key=sahil-new&number={number}",   method: "GET", description: "Pakistan phone number database lookup" },
-  { url: "https://tg-to-num-ten.vercel.app/tg?key=sahil_X&num={number}",                               method: "GET", description: "Telegram to phone number lookup" },
-  { url: "https://osint.invalidayushh.workers.dev/adhar?key=Sahil&q={adhar}",                          method: "GET", description: "Identification record lookup" },
-  { url: "https://ayaanmods.site/family.php?key=YOUR_SUBHXCO_KEY&term={adhar}",                        method: "GET", description: "Family tree and demographic record lookup" },
-  { url: "https://osint.invalidayushh.workers.dev/email?key=Rack&q={email}",                           method: "GET", description: "Email breach and record lookup" },
-  { url: "https://leakapi.dpdns.org/vehicle-info?registration_number={vehicle}",                        method: "GET", description: "Vehicle registration details lookup" },
-  { url: "https://leakapi.dpdns.org/api/vehicle?vehicle={vehicle}",                                     method: "GET", description: "Detailed vehicle intelligence record" },
-  { url: "https://leakapi.dpdns.org/rc?registration_number={vehicle}",                                  method: "GET", description: "Registration Certificate (RC) lookup" },
-  { url: "https://osint.invalidayushh.workers.dev/insta?key=Rack&q={username}",                        method: "GET", description: "Instagram account intelligence lookup" },
-  { name: "telegram-user", url: "https://tg-to-num-ten.vercel.app/tg?key=sahil_X&num={username}",     method: "GET", description: "Telegram user intelligence lookup" },
-  { url: "https://ft-osint-api.duckdns.org/api/git?key=sahil-new&username={username}",                 method: "GET", description: "GitHub profile intelligence lookup" },
-  { url: "https://ft-osint-api.duckdns.org/api/bgmi?key=sahil-new&uid={uid}",                         method: "GET", description: "BGMI player ID intelligence lookup" },
-  { url: "https://ft-osint-api.duckdns.org/api/ff?key=sahil-new&uid={uid}",                           method: "GET", description: "Free Fire player ID intelligence lookup" },
-  { url: "https://ft-osint-api.duckdns.org/api/ifsc?key=sahil-new&ifsc={ifsc}",                       method: "GET", description: "Bank IFSC code details lookup" },
-  { url: "https://ft-osint-api.duckdns.org/api/pan?key=sahil-new&pan={pan}",                          method: "GET", description: "PAN card record intelligence lookup" },
-  { url: "https://ft-osint-api.duckdns.org/api/ip?key=sahil-new&ip={ip}",                             method: "GET", description: "IP geolocation and intelligence lookup" },
-  { url: "https://ft-osint-api.duckdns.org/api/pincode?key=sahil-new&pin={pincode}",                  method: "GET", description: "Postal pincode geographic lookup" }
+
+  // name (PERMANENT)     backend URL (swap freely)                                                              param        description
+  { name: "tg",           url: "https://rootx-osint.in/?type=tg_num&key=Sahil_x&query={query}",                method:"GET", description:"Telegram user info lookup"              },
+  { name: "leak",         url: "https://raxxosint.onrender.com/leakosint?key=Customer&quiry={query}",          method:"GET", description:"Leak OSINT query lookup"                 },
+  { name: "num",          url: "https://osint.invalidayushh.workers.dev/num?key=Rack&q={number}",              method:"GET", description:"Mobile number intelligence"               },
+  { name: "numsearch",    url: "https://leakapi.dpdns.org/search?q={number}",                                  method:"GET", description:"Database number search"                  },
+  { name: "num-india",    url: "https://ft-osint-api.duckdns.org/api/number?key=sahil-new&num={number}",       method:"GET", description:"India phone number lookup"               },
+  { name: "num-pak",      url: "https://ft-osint-api.duckdns.org/api/pk?key=sahil-new&number={number}",        method:"GET", description:"Pakistan phone number lookup"            },
+  { name: "chain",        url: "https://leakapi.dpdns.org/chain?q={number}",                                   method:"GET", description:"Hi-tech number chain intelligence"       },
+  { name: "bom",          url: "https://leakapi.dpdns.org/bomb?num={number}",                                  method:"GET", description:"💣 SMS/Call bomber"                      },
+  { name: "adhar",        url: "https://osint.invalidayushh.workers.dev/adhar?key=Sahil&q={adhar}",            method:"GET", description:"Aadhaar identification lookup"           },
+  { name: "family",       url: "https://ayaanmods.site/family.php?key=YOUR_SUBHXCO_KEY&term={adhar}",          method:"GET", description:"Family tree demographic lookup"          },
+  { name: "email",        url: "https://osint.invalidayushh.workers.dev/email?key=Rack&q={email}",             method:"GET", description:"Email breach record lookup"              },
+  { name: "veh-info",     url: "https://leakapi.dpdns.org/vehicle-info?registration_number={vehicle}",         method:"GET", description:"Vehicle registration details"            },
+  { name: "veh",          url: "https://leakapi.dpdns.org/api/vehicle?vehicle={vehicle}",                      method:"GET", description:"Detailed vehicle intelligence"           },
+  { name: "rc",           url: "https://leakapi.dpdns.org/rc?registration_number={vehicle}",                   method:"GET", description:"RC registration lookup"                  },
+  { name: "insta",        url: "https://osint.invalidayushh.workers.dev/insta?key=Rack&q={username}",          method:"GET", description:"Instagram account intelligence"          },
+  { name: "git",          url: "https://ft-osint-api.duckdns.org/api/git?key=sahil-new&username={username}",   method:"GET", description:"GitHub profile intelligence"             },
+  { name: "bgmi",         url: "https://ft-osint-api.duckdns.org/api/bgmi?key=sahil-new&uid={uid}",            method:"GET", description:"BGMI player ID lookup"                   },
+  { name: "ff",           url: "https://ft-osint-api.duckdns.org/api/ff?key=sahil-new&uid={uid}",              method:"GET", description:"Free Fire player ID lookup"              },
+  { name: "ifsc",         url: "https://ft-osint-api.duckdns.org/api/ifsc?key=sahil-new&ifsc={ifsc}",          method:"GET", description:"Bank IFSC code lookup"                   },
+  { name: "pan",          url: "https://ft-osint-api.duckdns.org/api/pan?key=sahil-new&pan={pan}",             method:"GET", description:"PAN card intelligence lookup"            },
+  { name: "ip",           url: "https://ft-osint-api.duckdns.org/api/ip?key=sahil-new&ip={ip}",                method:"GET", description:"IP geolocation intelligence"             },
+  { name: "pin",          url: "https://ft-osint-api.duckdns.org/api/pincode?key=sahil-new&pin={pincode}",     method:"GET", description:"Postal pincode lookup"                   },
+
 ];
 
 // ─── AUTO NAME ───────────────────────────────────────────
@@ -149,7 +157,7 @@ function exampleValFor(param) {
 }
 
 APIs.forEach(api => {
-  const autoName = generateEndpointName(api, nameSet);
+  const autoName = api.name; // PERMANENT — always from name field, never generated
   nameSet.add(autoName);
   const matches = api.url.match(/\{([^}]+)\}/g);
   const required = matches ? matches.map(m => m.replace(/[{}]/g, '')) : [];
@@ -169,6 +177,7 @@ APIs.forEach(api => {
   registeredAPIs.push({
     name: autoName,
     url: api.url,
+    upstreamUrl: api.url.replace(/key=[^&}]+/g, 'key=***'),
     method: api.method || 'GET',
     description: api.description || 'API endpoint',
     requiredParams: required,
@@ -215,8 +224,9 @@ app.get('/api', (req, res) => {
       requiredParams: api.requiredParams,
       paramExamples: api.paramExamples,
       exampleQuery: api.exampleQuery,
-      // full example URL with ALL params
-      example: `${baseUrl}/api/${api.name}?${api.exampleQuery}`
+      example: `${baseUrl}/api/${api.name}?${api.exampleQuery}`,
+      // upstream backend URL — keys masked for display
+      upstreamUrl: api.upstreamUrl
     }));
 
     res.render('index', { apis: formattedApis, baseUrl, owner: OWNER, channel: CHANNEL });
@@ -224,6 +234,46 @@ app.get('/api', (req, res) => {
     console.error('Template error:', err);
     res.status(500).json({ success: false, error: "Template rendering failed", details: err.message });
   }
+});
+
+
+// ══════════════════════════════════════════════════════════
+// PERMANENT ROUTE MAP — these routes are LOCKED
+// Change backend URL in APIs[] above, NOT here
+// ══════════════════════════════════════════════════════════
+const PERMANENT_ROUTES = [
+  '/api/tg',
+  '/api/leak',
+  '/api/num',
+  '/api/numsearch',
+  '/api/num-india',
+  '/api/num-pak',
+  '/api/chain',
+  '/api/bom',
+  '/api/adhar',
+  '/api/family',
+  '/api/email',
+  '/api/veh-info',
+  '/api/veh',
+  '/api/rc',
+  '/api/insta',
+  '/api/git',
+  '/api/bgmi',
+  '/api/ff',
+  '/api/ifsc',
+  '/api/pan',
+  '/api/ip',
+  '/api/pin',
+];
+
+// Register each permanent route explicitly
+PERMANENT_ROUTES.forEach(route => {
+  const epName = route.replace('/api/', '');
+  app.all(route, (req, res, next) => {
+    req.params = req.params || {};
+    req.params.endpoint = epName;
+    next('route');
+  });
 });
 
 app.all('/api/:endpoint', async (req, res) => {
