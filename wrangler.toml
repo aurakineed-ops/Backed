@@ -1,13 +1,6 @@
 name = "osint-gateway"
 main = "server.js"
 compatibility_date = "2024-01-01"
-workers_dev = true
 
 [env.production]
-route = "yourdomain.com/*"
-zone_id = "your-zone-id"
-
-[env.production.vars]
-OWNER = "@sahilxalone"
-CHANNEL = "@osintnxera"
-NODE_ENV = "production"
+vars = { OWNER = "@sahilxalone", CHANNEL = "@osintnxera" }
