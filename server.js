@@ -4,6 +4,7 @@ const express = require('express');
 const axios   = require('axios');
 const cors    = require('cors');
 const path    = require('path');
+const db      = require('./db');
 const analytics = require('./analytics');
 
 const app = express();
@@ -15,15 +16,11 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// ─── ANALYTICS MIDDLEWARE (before routes) ────────────────
 app.use(analytics.middleware);
 
-// ─── BRANDING ────────────────────────────────────────────
 const OWNER   = "@sahilxalone";
 const CHANNEL = "@osintnxera";
 
-// ─── CLEANING ────────────────────────────────────────────
 const removeFields = [
   'owner', 'OWNER', 'channel', 'CHANNEL', 'telegram', 'contact',
   'instagram', 'twitter', 'fb', 'facebook', 'website', 'github',
@@ -79,15 +76,7 @@ function cleanData(obj) {
   }
 }
 
-// ─── APIs ────────────────────────────────────────────────
-// ══════════════════════════════════════════════════════════
-// PERMANENT ENDPOINT REGISTRY
-// name = your fixed /api/<name> — NEVER changes
-// url  = backend — swap freely anytime
-// ══════════════════════════════════════════════════════════
 const APIs = [
-
-  // name (PERMANENT)     backend URL (swap freely)                                                              param        description
   { name: "tg",           url: "https://rootx-osint.in/?type=tg_num&key=Sahil_x&query={query}",                method:"GET", description:"Telegram user info lookup"              },
   { name: "leak",         url: "https://raxxosint.onrender.com/leakosint?key=Customer&quiry={query}",          method:"GET", description:"Leak OSINT query lookup"                 },
   { name: "num",          url: "https://osint.invalidayushh.workers.dev/num?key=Rack&q={number}",              method:"GET", description:"Mobile number intelligence"               },
@@ -110,36 +99,7 @@ const APIs = [
   { name: "pan",          url: "https://ft-osint-api.duckdns.org/api/pan?key=sahil-new&pan={pan}",             method:"GET", description:"PAN card intelligence lookup"            },
   { name: "ip",           url: "https://ft-osint-api.duckdns.org/api/ip?key=sahil-new&ip={ip}",                method:"GET", description:"IP geolocation intelligence"             },
   { name: "pin",          url: "https://ft-osint-api.duckdns.org/api/pincode?key=sahil-new&pin={pincode}",     method:"GET", description:"Postal pincode lookup"                   },
-
 ];
-
-// ─── AUTO NAME ───────────────────────────────────────────
-function generateEndpointName(api, existingNames) {
-  if (api.name) return api.name.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-  try {
-    const cleanUrl = api.url.replace(/\{[^}]+\}/g, 'placeholder');
-    const urlObj   = new URL(cleanUrl);
-    const typeParam = urlObj.searchParams.get('type');
-    if (typeParam) {
-      const base = typeParam.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-      if (!existingNames.has(base)) return base;
-    }
-    const segments = urlObj.pathname.split('/').filter(Boolean);
-    const filtered = segments.filter(s => !['api','v1','v2','index.php'].includes(s.toLowerCase()));
-    let candidate = filtered[filtered.length - 1] || segments[segments.length - 1] || 'api';
-    candidate = candidate.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-    let finalName = candidate, counter = 1;
-    while (existingNames.has(finalName)) { finalName = `${candidate}-${counter}`; counter++; }
-    return finalName;
-  } catch (e) {
-    let fallback = 'endpoint', finalName = fallback, counter = 1;
-    while (existingNames.has(finalName)) { finalName = `${fallback}-${counter}`; counter++; }
-    return finalName;
-  }
-}
-
-const registeredAPIs = [];
-const nameSet = new Set();
 
 function exampleValFor(param) {
   if (param.includes('number') || param.includes('num')) return '9876543210';
@@ -156,13 +116,15 @@ function exampleValFor(param) {
   return '12345678';
 }
 
+const registeredAPIs = [];
+const nameSet = new Set();
+
 APIs.forEach(api => {
-  const autoName = api.name; // PERMANENT — always from name field, never generated
+  const autoName = api.name;
   nameSet.add(autoName);
   const matches = api.url.match(/\{([^}]+)\}/g);
   const required = matches ? matches.map(m => m.replace(/[{}]/g, '')) : [];
 
-  // build example query string with ALL params
   const exampleQuery = required.length > 0
     ? required.map(p => `${p}=${exampleValFor(p)}`).join('&')
     : 'query=test';
@@ -170,7 +132,6 @@ APIs.forEach(api => {
   const exampleParam = required[0] || 'query';
   const exampleVal   = exampleValFor(exampleParam);
 
-  // per-param example map passed to EJS template
   const paramExamples = {};
   required.forEach(p => { paramExamples[p] = exampleValFor(p); });
 
@@ -188,18 +149,35 @@ APIs.forEach(api => {
   });
 });
 
-// ─── ROUTES ──────────────────────────────────────────────
+// SQL LOGGING FUNCTION
+function logQuery(endpointName, inputParam, inputValue, statusCode, responseData, errorMsg, ipAddr, execTime) {
+  db.run(`
+    INSERT INTO queries (endpoint, input_param, input_value, response_status, response_data, error_msg, ip_address, execution_time)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `, [endpointName, inputParam, inputValue, statusCode, JSON.stringify(responseData), errorMsg, ipAddr, execTime], function(err) {
+    if (err) console.error('DB log failed:', err);
+  });
+
+  db.run(`
+    INSERT INTO analytics (endpoint, total_queries, successful, avg_time)
+    VALUES (?, 1, ?, ?)
+    ON CONFLICT(endpoint) DO UPDATE SET
+      total_queries = total_queries + 1,
+      successful = successful + ?,
+      avg_time = (avg_time * (total_queries - 1) + ?) / total_queries
+  `, [endpointName, statusCode < 400 ? 1 : 0, execTime, statusCode < 400 ? 1 : 0, execTime], (err) => {
+    if (err) console.error('Analytics update failed:', err);
+  });
+}
 
 app.get('/health', (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Analytics JSON API — used by dashboard charts
 app.get('/analytics/data', (req, res) => {
   res.json(analytics.snapshot());
 });
 
-// Analytics dashboard page
 app.get('/analytics', (req, res) => {
   res.render('analytics', {
     owner: OWNER,
@@ -225,7 +203,6 @@ app.get('/api', (req, res) => {
       paramExamples: api.paramExamples,
       exampleQuery: api.exampleQuery,
       example: `${baseUrl}/api/${api.name}?${api.exampleQuery}`,
-      // upstream backend URL — keys masked for display
       upstreamUrl: api.upstreamUrl
     }));
 
@@ -236,37 +213,53 @@ app.get('/api', (req, res) => {
   }
 });
 
+// SQL ENDPOINTS
+app.get('/sql/stats', (req, res) => {
+  db.all(`
+    SELECT endpoint, total_queries, successful, ROUND(avg_time, 2) as avg_time
+    FROM analytics
+    ORDER BY total_queries DESC
+  `, (err, rows) => {
+    if (err) return res.status(500).json({ success: false, error: err.message });
+    res.json({ success: true, data: rows });
+  });
+});
 
-// ══════════════════════════════════════════════════════════
-// PERMANENT ROUTE MAP — these routes are LOCKED
-// Change backend URL in APIs[] above, NOT here
-// ══════════════════════════════════════════════════════════
+app.get('/sql/queries/:endpoint', (req, res) => {
+  db.all(`
+    SELECT * FROM queries
+    WHERE endpoint = ?
+    ORDER BY created_at DESC
+    LIMIT 100
+  `, [req.params.endpoint], (err, rows) => {
+    if (err) return res.status(500).json({ success: false, error: err.message });
+    res.json({ success: true, count: rows.length, data: rows });
+  });
+});
+
+app.get('/sql/search', (req, res) => {
+  const q = req.query.q;
+  if (!q) return res.status(400).json({ success: false, error: "Missing query parameter" });
+  
+  db.all(`
+    SELECT * FROM queries
+    WHERE input_value LIKE ? OR input_param LIKE ?
+    ORDER BY created_at DESC
+    LIMIT 50
+  `, [`%${q}%`, `%${q}%`], (err, rows) => {
+    if (err) return res.status(500).json({ success: false, error: err.message });
+    res.json({ success: true, count: rows.length, data: rows });
+  });
+});
+
+// MAIN API GATEWAY
 const PERMANENT_ROUTES = [
-  '/api/tg',
-  '/api/leak',
-  '/api/num',
-  '/api/numsearch',
-  '/api/num-india',
-  '/api/num-pak',
-  '/api/chain',
-  '/api/bom',
-  '/api/adhar',
-  '/api/family',
-  '/api/email',
-  '/api/veh-info',
-  '/api/veh',
-  '/api/rc',
-  '/api/insta',
-  '/api/git',
-  '/api/bgmi',
-  '/api/ff',
-  '/api/ifsc',
-  '/api/pan',
-  '/api/ip',
-  '/api/pin',
+  '/api/tg', '/api/leak', '/api/num', '/api/numsearch', '/api/num-india', '/api/num-pak',
+  '/api/chain', '/api/bom', '/api/adhar', '/api/family', '/api/email', '/api/veh-info',
+  '/api/veh', '/api/rc', '/api/insta', '/api/git', '/api/bgmi', '/api/ff', '/api/ifsc',
+  '/api/pan', '/api/ip', '/api/pin',
 ];
 
-// Register each permanent route explicitly
 PERMANENT_ROUTES.forEach(route => {
   const epName = route.replace('/api/', '');
   app.all(route, (req, res, next) => {
@@ -278,6 +271,7 @@ PERMANENT_ROUTES.forEach(route => {
 
 app.all('/api/:endpoint', async (req, res) => {
   try {
+    const startTime = Date.now();
     const endpointName = req.params.endpoint;
     const apiConfig    = registeredAPIs.find(a => a.name === endpointName);
 
@@ -290,18 +284,24 @@ app.all('/api/:endpoint', async (req, res) => {
 
     const inputParams = { ...req.query, ...req.body };
     let targetValue = null;
+    let usedParam = null;
 
     for (const param of apiConfig.requiredParams) {
       if (inputParams[param] !== undefined && inputParams[param] !== '') {
-        targetValue = inputParams[param]; break;
+        targetValue = inputParams[param];
+        usedParam = param;
+        break;
       }
     }
+    
     if (!targetValue) {
       const fallbackKeys = ['query','q','number','num','adhar','aadhar','email','vehicle',
         'registration_number','username','user','uid','id','ifsc','pan','ip','pincode','pin','term','quiry'];
       for (const key of fallbackKeys) {
         if (inputParams[key] !== undefined && inputParams[key] !== '') {
-          targetValue = inputParams[key]; break;
+          targetValue = inputParams[key];
+          usedParam = key;
+          break;
         }
       }
     }
@@ -327,7 +327,7 @@ app.all('/api/:endpoint', async (req, res) => {
       url: finalUpstreamUrl,
       timeout: 30000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': 'application/json, text/plain, */*'
       },
       validateStatus: status => status < 600
@@ -338,23 +338,23 @@ app.all('/api/:endpoint', async (req, res) => {
     }
 
     const response = await axios(axiosConfig);
+    const execTime = Date.now() - startTime;
 
     if (!response.data) {
-      return res.status(500).json({ success: false, error: "API returned no data",
-        status: response.status, owner: OWNER, channel: CHANNEL });
+      logQuery(endpointName, usedParam, targetValue, 500, {}, "No data returned", req.ip, execTime);
+      return res.status(500).json({ success: false, error: "API returned no data", status: response.status, owner: OWNER, channel: CHANNEL });
     }
 
     if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
-      return res.status(500).json({ success: false, error: "API returned HTML error page",
-        message: "The upstream API returned an HTML error page instead of JSON data",
-        owner: OWNER, channel: CHANNEL });
+      logQuery(endpointName, usedParam, targetValue, 500, {}, "HTML error page returned", req.ip, execTime);
+      return res.status(500).json({ success: false, error: "API returned HTML error page", owner: OWNER, channel: CHANNEL });
     }
 
     let cleaned = cleanData(response.data);
 
     if (!cleaned || (typeof cleaned === 'object' && Object.keys(cleaned).length === 0)) {
-      return res.status(404).json({ success: false, error: "No data found",
-        message: "The API returned empty or null data", owner: OWNER, channel: CHANNEL });
+      logQuery(endpointName, usedParam, targetValue, 404, cleaned, "Empty response", req.ip, execTime);
+      return res.status(404).json({ success: false, error: "No data found", owner: OWNER, channel: CHANNEL });
     }
 
     if (cleaned && typeof cleaned === 'object' && !Array.isArray(cleaned)) {
@@ -365,20 +365,25 @@ app.all('/api/:endpoint', async (req, res) => {
       cleaned = { data: cleaned, owner: OWNER, channel: CHANNEL, timestamp: new Date().toISOString() };
     }
 
+    logQuery(endpointName, usedParam, targetValue, response.status, cleaned, null, req.ip, execTime);
+
     return res.status(response.status).json(cleaned);
 
   } catch (error) {
+    const execTime = Date.now() - startTime;
     console.error(`[${new Date().toISOString()}] Error:`, error.message);
+    
     let errorMessage = error.message || "An unexpected error occurred";
     let errorDetails = {};
 
     if (error.response) {
       errorDetails.status = error.response.status;
-      errorDetails.data   = error.response.data;
       errorMessage = `API returned status ${error.response.status}`;
     } else if (error.request) {
       errorMessage = "No response from API server (timeout or network error)";
     }
+
+    logQuery(req.params.endpoint, null, null, 500, {}, errorMessage, req.ip, execTime);
 
     return res.status(500).json({
       success: false, error: "Gateway execution error",
@@ -394,7 +399,6 @@ if (require.main === module) {
     console.log(`API Gateway running on port ${PORT}`);
     console.log(`Owner: ${OWNER} | Channel: ${CHANNEL}`);
     console.log(`Endpoints: ${registeredAPIs.length}`);
-    console.log(`Analytics: http://localhost:${PORT}/analytics`);
   });
 }
 
