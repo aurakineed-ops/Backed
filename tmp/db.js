@@ -1,12 +1,54 @@
-// db.js - Pure Memory Storage (No SQLite)
-console.log('📊 Initializing memory query logger...');
+// db.js - File-based storage in /tmp (No SQLite)
+console.log('📊 Initializing file-based storage in /tmp...');
 
-// In-memory storage
-const store = {
+const fs = require('fs');
+const path = require('path');
+
+// Use /tmp directory (writable on Render)
+const DB_FILE = '/tmp/osint-data.json';
+console.log('📁 Database file:', DB_FILE);
+
+// In-memory cache
+let store = {
   queries: [],
   analytics: {},
   id: 0
 };
+
+// Load data from file if exists
+try {
+  if (fs.existsSync(DB_FILE)) {
+    const data = fs.readFileSync(DB_FILE, 'utf8');
+    const parsed = JSON.parse(data);
+    store = parsed;
+    console.log(`✅ Loaded ${store.queries.length} queries from file`);
+  } else {
+    console.log('📄 No existing data file, starting fresh');
+    saveToFile();
+  }
+} catch (e) {
+  console.log('⚠️ Could not load data file, starting fresh');
+  saveToFile();
+}
+
+// Save to file function
+function saveToFile() {
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(store, null, 2));
+  } catch (e) {
+    console.error('❌ Failed to save to file:', e.message);
+  }
+}
+
+// Save every 10 seconds
+setInterval(saveToFile, 10000);
+
+// Save on exit
+process.on('SIGTERM', () => {
+  console.log('💾 Saving data before exit...');
+  saveToFile();
+  process.exit(0);
+});
 
 const db = {
   serialize: (fn) => {
@@ -36,7 +78,10 @@ const db = {
           execution_time: execTime || 0,
           created_at: new Date().toISOString()
         });
-        // console.log(`✅ Query logged: ${endpoint} (ID: ${store.id})`);
+        // Auto-save after each insert (but debounced)
+        if (store.queries.length % 5 === 0) {
+          saveToFile();
+        }
       }
       
       // Handle INSERT INTO analytics
@@ -49,6 +94,7 @@ const db = {
         stats.total_queries = (stats.total_queries || 0) + 1;
         if (successInc) stats.successful = (stats.successful || 0) + 1;
         stats.avg_time = (stats.avg_time * (stats.total_queries - 1) + (execTime || 0)) / stats.total_queries;
+        saveToFile();
       }
       
       if (callback) {
@@ -78,7 +124,6 @@ const db = {
             avg_time: Math.round((stats.avg_time || 0) * 100) / 100
           };
         });
-        // Sort by total_queries DESC
         result.sort((a, b) => b.total_queries - a.total_queries);
       }
       // Get queries for specific endpoint
@@ -138,12 +183,11 @@ const db = {
 setInterval(() => {
   const queryCount = store.queries.length;
   const endpointCount = Object.keys(store.analytics).length;
-  if (queryCount > 0 || endpointCount > 0) {
-    console.log(`📊 Memory Store: ${queryCount} queries, ${endpointCount} endpoints`);
-  }
+  console.log(`📊 File Store: ${queryCount} queries, ${endpointCount} endpoints [${DB_FILE}]`);
 }, 30000);
 
-console.log('✅ Memory query logger ready!');
-console.log(`📊 Initial stats: 0 queries, 0 endpoints`);
+console.log('✅ File-based storage ready!');
+console.log(`📊 Initial stats: ${store.queries.length} queries, ${Object.keys(store.analytics).length} endpoints`);
+console.log(`📁 Data saved to: ${DB_FILE}`);
 
 module.exports = db;
